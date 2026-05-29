@@ -476,7 +476,7 @@ const RT_ITEMS = [
   { k:'cg', l:'咳嗽能力',   bg:'#FEF3C7', cl:'#92400E',
     opts:['強而無痰','陣發性咳嗽','強而有痰','弱/有痰','無力咳/需抽痰'] },
   { k:'ox', l:'氧氣需求',   bg:'#DCFCE7', cl:'#166534',
-    opts:['SpO₂ >92% RA','SpO₂ >92% NC 2-4L/min','SpO₂ >92% O₂ Mask (FiO₂≤50%)','SpO₂ >90% Non-rebreathing Mask','SpO₂ >90% HFNC/NIV'] },
+    opts:['SpO₂ ≥92% RA','SpO₂ ≥92% NC 2-4L/min','SpO₂ ≥92% O₂ Mask (FiO₂≤50%)','SpO₂ ≥90% Non-rebreathing Mask','SpO₂ ≥90% HFNC/NIV'] },
 ];
 const INT_DEF = [
   {k:'int_pt',      l:'胸腔物理治療'},
@@ -618,18 +618,15 @@ function buildRapidUI(cid, state, prefix) {
 
 function buildRTUI(cid, scores, prefix) {
   document.getElementById(cid).innerHTML = RT_ITEMS.map(d => `
-    <div style="padding:11px 16px;border-bottom:1px solid var(--g2)">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-        <div class="rl" style="background:${d.bg};color:${d.cl};font-size:13px;font-weight:700;width:34px;height:34px">${d.k.toUpperCase()}</div>
-        <strong style="font-size:15px">${d.l}</strong>
-        <span class="chip cgray" id="${prefix}-${d.k}-chip" style="margin-left:auto;font-size:12px">未填</span>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:5px">
-        ${d.opts.map((opt,i)=>`
-          <button id="${prefix}-${d.k}-${i}" onclick="setScore('${prefix}','${d.k}',${i})"
-            style="text-align:left;padding:8px 12px;border-radius:8px;border:1.5px solid var(--g2);background:var(--g1);font-size:13px;font-family:inherit;cursor:pointer;transition:all .15s;color:var(--g8)">
-            <span style="font-weight:700;color:var(--g4);margin-right:6px">${i}分</span>${opt}
-          </button>`).join('')}
+    <div style="display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid var(--g2)">
+      <div class="rl" style="background:${d.bg};color:${d.cl};font-size:13px;font-weight:700;width:32px;height:32px;flex-shrink:0">${d.k.toUpperCase()}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:600;margin-bottom:5px">${d.l}</div>
+        <select id="${prefix}-${d.k}-sel" onchange="setScore('${prefix}','${d.k}',parseInt(this.value))"
+          style="width:100%;padding:9px 12px;border:1.5px solid var(--g2);border-radius:8px;font-size:13px;font-family:inherit;background:var(--g1);color:var(--g8);-webkit-appearance:none;appearance:none;outline:none">
+          <option value="" disabled selected>— 請選擇 —</option>
+          ${d.opts.map((opt,i)=>`<option value="${i}">${i}分　${opt}</option>`).join('')}
+        </select>
       </div>
     </div>`).join('');
 }
@@ -659,30 +656,44 @@ function updateRapidVerdict() {
 function setScore(prefix, k, score) {
   const st = prefix==='a' ? rtScoreAdd : rtScoreV[prefix==='v24'?'24h':'48h'];
   st[k] = score;
-  // update button styles
-  RT_ITEMS.find(d=>d.k===k).opts.forEach((_,i)=>{
-    const btn = document.getElementById(`${prefix}-${k}-${i}`);
-    if (!btn) return;
-    if (i===score) {
-      btn.style.cssText='text-align:left;padding:8px 12px;border-radius:8px;border:1.5px solid var(--navy2);background:var(--navy3);font-size:13px;font-family:inherit;cursor:pointer;color:var(--navy);font-weight:600';
-    } else {
-      btn.style.cssText='text-align:left;padding:8px 12px;border-radius:8px;border:1.5px solid var(--g2);background:var(--g1);font-size:13px;font-family:inherit;cursor:pointer;color:var(--g8)';
-    }
-  });
-  // update chip
-  const chip = document.getElementById(`${prefix}-${k}-chip`);
-  if (chip) { chip.className='chip cnavy'; chip.textContent=score+'分'; }
-  if (prefix==='a') updateRTVerdict();
-  else {
-    const vtype = prefix==='v24'?'24h':'48h';
-    const total = rtTotal(rtScoreV[vtype]);
-    const chip  = document.getElementById('rt-total-chip-'+vtype);
-    if (chip) {
+  // highlight select
+  const sel = document.getElementById(`${prefix}-${k}-sel`);
+  if (sel) { sel.style.borderColor='var(--navy2)'; sel.style.background='var(--navy3)'; }
+  // update total chip
+  const vtype = prefix==='v24'?'24h':'48h';
+  const scoreObj = rtScoreV[vtype];
+  const total = rtTotal(scoreObj);
+  const chip = document.getElementById('rt-total-chip-'+vtype);
+  if (chip) {
+    const risk = rtRisk(total);
+    chip.className = 'chip '+(total!==null?risk.cls:'cgray');
+    chip.textContent = total!==null ? total+'分' : '未完成';
+  }
+  // update risk panel
+  const panel = document.getElementById('rt-risk-panel-'+vtype);
+  if (panel) {
+    if (total!==null) {
       const risk = rtRisk(total);
-      chip.className = 'chip '+(total!==null?risk.cls:'cgray');
-      chip.textContent = total!==null ? total+'分 — '+risk.label : '未完成';
+      panel.style.display='block';
+      panel.className=''; 
+      panel.innerHTML = rtRiskDetail(total);
+    } else {
+      panel.style.display='none';
     }
   }
+}
+
+function rtRiskDetail(total) {
+  let bg, color, title, items;
+  if (total<=5)       { bg='var(--green2)'; color='var(--green)'; title='低風險 — 常規追蹤'; items=[]; }
+  else if (total<=10) { bg='var(--amber2)'; color='var(--amber)'; title='中風險 — 加強監測'; items=[]; }
+  else if (total<=15) { bg='var(--red2)';   color='var(--red)';   title='高風險 — 考慮 RT 介入'; items=['CPT 胸腔物理治療','噴霧治療','抽痰']; }
+  else                { bg='var(--red2)';   color='var(--red)';   title='極高風險 — 通知醫師評估是否需轉回 ICU'; items=[]; }
+  const itemHtml = items.length ? '<div style="margin-top:6px;font-size:13px">'+items.map(i=>'• '+i).join('<br>')+'</div>' : '';
+  return `<div style="background:${bg};border-radius:var(--rs);padding:12px 14px;margin:12px 16px 0">
+    <div style="font-weight:700;font-size:14px;color:${color}">總分 ${total} 分 — ${title}</div>
+    ${itemHtml}
+  </div>`;
 }
 
 function updateRTVerdict() {
@@ -941,11 +952,19 @@ function renderVisit(type, visit, prevDone) {
       <div style="flex:1"><label class="fl">訪視時間</label><input type="text" id="vt-${type}" value="${now}"></div>
       <div style="text-align:right">
         <div style="font-size:11px;color:var(--g4);margin-bottom:3px">RT 評估總分</div>
-        <span class="chip cgray" id="rt-total-chip-${type}" style="font-size:13px">未完成</span>
+        <span class="chip cgray" id="rt-total-chip-${type}" style="font-size:14px;font-weight:700">未完成</span>
       </div>
     </div>
     <div id="rt-form-${type}"></div>
-    <div style="padding:12px 16px">
+    <div id="rt-risk-panel-${type}" style="display:none"></div>
+    <div style="padding:12px 16px 6px;border-top:1px solid var(--g2);margin-top:12px">
+      <div style="font-size:11px;color:var(--g4);line-height:1.9;margin-bottom:12px">
+        <div style="font-weight:700;margin-bottom:3px">總分：0–20 分</div>
+        <div>• 0–5 分：低風險，常規追蹤</div>
+        <div>• 6–10 分：中風險，加強監測</div>
+        <div>• 11–15 分：高風險，考慮 RT 介入（CPT、噴霧、抽痰）</div>
+        <div>• ≥16 分：極高風險，通知醫師評估是否需轉回 ICU</div>
+      </div>
       <div style="font-size:13px;font-weight:700;color:var(--g4);margin-bottom:8px;letter-spacing:.05em">介入措施（可複選）</div>
       <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px">${int_html}</div>
       <div class="fr"><label class="fl">備註</label><textarea id="vn-${type}" rows="3" placeholder="異常狀況、通知記錄…"></textarea></div>
