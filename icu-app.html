@@ -454,6 +454,16 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 let CU      = null;   // current user profile
 let ovPtId  = null;
 let listTab = 'pending'; // 'pending' | 'done'
+const rapidAdd = {R:null,A:null,P:null,I:null,D:null};
+
+// ── RAPID-ICU 轉出前評估（pass/fail）────────────────────────────────
+const RAPID_DEF = [
+  {k:'R',l:'呼吸頻率',    s:'12–20次/分，無輔助肌', bg:'#D4F0EB',cl:'#0E7C6A'},
+  {k:'A',l:'呼吸道保護',  s:'嗆咳正常，可自清分泌物',bg:'#D6E8F7',cl:'#0B3D6B'},
+  {k:'P',l:'脫管穩定度',  s:'脫離呼吸器 ≥24hr',    bg:'#EDE9FE',cl:'#5B21B6'},
+  {k:'I',l:'氧氣需求',    s:'SpO₂≥94%（低流量/RA）',bg:'#FEF3C7',cl:'#92400E'},
+  {k:'D',l:'分泌物減少',  s:'抽痰間隔 ≥4小時',     bg:'#DCFCE7',cl:'#166534'},
+];
 
 // ── RT Assessment Tool (5項，每項0-4分，總分0-20) ──────────────────
 const RT_ITEMS = [
@@ -476,7 +486,8 @@ const INT_DEF = [
   {k:'int_consult', l:'胸腔科會診'},
 ];
 // score state: null = unanswered, 0-4 = score
-const rtScoreAdd = {ph:null,bs:null,rr:null,cg:null,ox:null};
+const rtScoreAdd = {ph:null,bs:null,rr:null,cg:null,ox:null}; // for pre-discharge RAPID (not used in savePt)
+const rtVisitAdd = {ph:null,bs:null,rr:null,cg:null,ox:null};
 const rtScoreV   = {'24h':{ph:null,bs:null,rr:null,cg:null,ox:null},
                     '48h':{ph:null,bs:null,rr:null,cg:null,ox:null}};
 
@@ -528,7 +539,7 @@ function showApp() {
   document.getElementById('app').style.display = 'flex';
   document.getElementById('tb-user').textContent = CU.name + '（' + roleL(CU.role) + '）';
   document.getElementById('t-admin').style.display = CU.role==='admin' ? 'flex' : 'none';
-  buildRTUI('rapid-add', rtScoreAdd, 'a');
+  buildRapidUI('rapid-add', rapidAdd, 'a');
   document.getElementById('a-date').value = today();
   go('list');
 }
@@ -593,6 +604,18 @@ function tbAction() { document.getElementById('tb-action').onclick(); }
 // ══════════════════════════════════════════════════════════
 // RAPID UI
 // ══════════════════════════════════════════════════════════
+function buildRapidUI(cid, state, prefix) {
+  document.getElementById(cid).innerHTML = RAPID_DEF.map(d => `
+    <div class="ri">
+      <div class="rl" style="background:${d.bg};color:${d.cl}">${d.k}</div>
+      <div class="rtxt"><strong>${d.l}</strong><span>${d.s}</span></div>
+      <div class="rbtns">
+        <button class="rb" id="${prefix}${d.k}p" onclick="setR('${prefix}','${d.k}','pass')">✓</button>
+        <button class="rb" id="${prefix}${d.k}f" onclick="setR('${prefix}','${d.k}','fail')">✗</button>
+      </div>
+    </div>`).join('');
+}
+
 function buildRTUI(cid, scores, prefix) {
   document.getElementById(cid).innerHTML = RT_ITEMS.map(d => `
     <div style="padding:11px 16px;border-bottom:1px solid var(--g2)">
@@ -609,6 +632,28 @@ function buildRTUI(cid, scores, prefix) {
           </button>`).join('')}
       </div>
     </div>`).join('');
+}
+
+function setR(prefix, k, v) {
+  rapidAdd[k] = v;
+  const bp = document.getElementById(prefix+k+'p');
+  const bf = document.getElementById(prefix+k+'f');
+  if (bp) bp.className = 'rb' + (v==='pass'?' rp':'');
+  if (bf) bf.className = 'rb' + (v==='fail'?' rf':'');
+  updateRapidVerdict();
+}
+
+function updateRapidVerdict() {
+  const vals = Object.values(rapidAdd);
+  const answered = vals.filter(x=>x).length;
+  const chip = document.getElementById('rc');
+  if (answered < 5) {
+    chip.className='chip cnavy'; chip.textContent=answered+'/5';
+    return;
+  }
+  const allPass = vals.every(v=>v==='pass');
+  chip.className = 'chip '+(allPass?'cok':'calert');
+  chip.textContent = allPass?'✓ 可轉出':'⚠ 建議暫緩轉出';
 }
 
 function setScore(prefix, k, score) {
@@ -684,8 +729,8 @@ async function savePt() {
     icu_days:      parseInt(document.getElementById('a-days').value) || null,
     swift_source: sw('sw-src'), swift_los: sw('sw-los'), swift_gcs: sw('sw-gcs'),
     swift_pf:     sw('sw-pf'),  swift_pco2: sw('sw-pco2'),
-    rapid_r: rtScoreAdd.ph, rapid_a: rtScoreAdd.bs, rapid_p: rtScoreAdd.rr,
-    rapid_i: rtScoreAdd.cg, rapid_d: rtScoreAdd.ox,
+    rapid_r: rapidAdd.R, rapid_a: rapidAdd.A, rapid_p: rapidAdd.P,
+    rapid_i: rapidAdd.I, rapid_d: rapidAdd.D,
     created_by: CU.id,
   });
   if (error) { toast('儲存失敗：'+error.message); return; }
@@ -698,8 +743,8 @@ function resetAdd() {
   document.getElementById('a-date').value = today();
   ['sw-src','sw-los','sw-gcs','sw-pf','sw-pco2'].forEach(id=>
     document.getElementById(id).selectedIndex=0);
-  Object.keys(rtScoreAdd).forEach(k=>rtScoreAdd[k]=null);
-  buildRTUI('rapid-add', rtScoreAdd, 'a');
+  Object.keys(rapidAdd).forEach(k=>rapidAdd[k]=null);
+  buildRapidUI('rapid-add', rapidAdd, 'a');
   document.getElementById('rc').className='chip cnavy';
   document.getElementById('rc').textContent='0/5';
   calcSw();
@@ -839,7 +884,7 @@ async function openPt(id) {
       <span class="chip ${parseInt(p.swift_total)>=15?'calert':'cok'}" style="font-size:20px">
         ${parseInt(p.swift_total)>=15?'高風險':'低風險'}</span></span></div>
     <div class="dv"></div>
-    <div style="font-size:21px;font-weight:700;color:var(--g4);margin:8px 0 4px;letter-spacing:.06em">RAPID-ICU</div>
+    <div style="font-size:14px;font-weight:700;color:var(--g4);margin:8px 0 4px;letter-spacing:.06em">RAPID-ICU 轉出前評估</div>
     ${rrows}`;
 
   document.getElementById('ov-v24').innerHTML = renderVisit('24h',v24,true);
@@ -861,8 +906,8 @@ function renderVisit(type, visit, prevDone) {
               int_o2:'氧氣調整',int_consult:'胸腔科會診'};
     const ints=Object.keys(il).filter(k=>visit[k]).map(k=>il[k]).join('、');
     // scores stored in rapid_r/a/p/i/d as 0-4 integers
-    const scores = {ph:visit.rapid_r, bs:visit.rapid_a, rr:visit.rapid_p,
-                    cg:visit.rapid_i, ox:visit.rapid_d};
+    const scores = {ph:visit.rt_ph, bs:visit.rt_bs, rr:visit.rt_rr,
+                    cg:visit.rt_cg, ox:visit.rt_ox};
     const total = Object.values(scores).every(v=>v!==null&&v!==undefined)
       ? Object.values(scores).reduce((a,b)=>a+Number(b),0) : null;
     const risk  = rtRisk(total);
@@ -930,8 +975,8 @@ async function saveVisit(type) {
   const { error } = await sb.from('visits').upsert({
     patient_id:   ovPtId,
     visit_type:   type,
-    rapid_r: rs.ph, rapid_a: rs.bs, rapid_p: rs.rr,
-    rapid_i: rs.cg, rapid_d: rs.ox,
+    rt_ph: rs.ph, rt_bs: rs.bs, rt_rr: rs.rr,
+    rt_cg: rs.cg, rt_ox: rs.ox,
     ...intVals,
     notes:        document.getElementById('vn-'+type)?.value||null,
     visited_time: document.getElementById('vt-'+type)?.value||null,
