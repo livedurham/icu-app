@@ -226,6 +226,17 @@ textarea{resize:none}
   <div class="pages">
     <!-- 追蹤列表 -->
     <div class="page active" id="pg-list">
+      <!-- 頁簽 -->
+      <div style="display:flex;background:white;border-radius:var(--r);box-shadow:var(--sh);margin-bottom:10px;overflow:hidden">
+        <button id="lt-pending" onclick="switchListTab('pending')"
+          style="flex:1;padding:12px 8px;border:none;background:var(--navy);color:white;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;transition:all .15s">
+          待訪視 <span id="lt-pending-count" style="background:rgba(255,255,255,.25);border-radius:20px;padding:2px 8px;font-size:12px;margin-left:4px">0</span>
+        </button>
+        <button id="lt-done" onclick="switchListTab('done')"
+          style="flex:1;padding:12px 8px;border:none;background:white;color:var(--g4);font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;transition:all .15s">
+          已完成 <span id="lt-done-count" style="background:var(--g2);border-radius:20px;padding:2px 8px;font-size:12px;margin-left:4px">0</span>
+        </button>
+      </div>
       <div class="card"><div id="pt-list"></div></div>
     </div>
 
@@ -442,6 +453,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 // ══════════════════════════════════════════════════════════
 let CU      = null;   // current user profile
 let ovPtId  = null;
+let listTab = 'pending'; // 'pending' | 'done'
 
 const RAPID_DEF = [
   {k:'R',l:'呼吸頻率',    s:'12–20次/分，無輔助肌', bg:'#D4F0EB',cl:'#0E7C6A'},
@@ -656,6 +668,83 @@ function resetAdd() {
 // ══════════════════════════════════════════════════════════
 // PATIENTS — LIST
 // ══════════════════════════════════════════════════════════
+function switchListTab(tab) {
+  listTab = tab;
+  const pBtn = document.getElementById('lt-pending');
+  const dBtn = document.getElementById('lt-done');
+  const pCount = document.getElementById('lt-pending-count');
+  const dCount = document.getElementById('lt-done-count');
+  if (tab==='pending') {
+    pBtn.style.cssText='flex:1;padding:13px 8px;border:none;background:var(--navy);color:white;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer';
+    dBtn.style.cssText='flex:1;padding:13px 8px;border:none;background:white;color:var(--g4);font-size:15px;font-weight:700;font-family:inherit;cursor:pointer';
+    pCount.style.background='rgba(255,255,255,.25)'; pCount.style.color='white';
+    dCount.style.background='var(--g2)'; dCount.style.color='var(--g6)';
+  } else {
+    dBtn.style.cssText='flex:1;padding:13px 8px;border:none;background:var(--navy);color:white;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer';
+    pBtn.style.cssText='flex:1;padding:13px 8px;border:none;background:white;color:var(--g4);font-size:15px;font-weight:700;font-family:inherit;cursor:pointer';
+    dCount.style.background='rgba(255,255,255,.25)'; dCount.style.color='white';
+    pCount.style.background='var(--g2)'; pCount.style.color='var(--g6)';
+  }
+  renderList(window._cachedPts || []);
+}
+
+function renderList(pts) {
+  const c = document.getElementById('pt-list');
+  const filtered = listTab==='pending'
+    ? pts.filter(p=>!p.v48_id)
+    : pts.filter(p=>!!p.v48_id);
+
+  if (!filtered.length) {
+    const msg = listTab==='pending' ? '目前無待訪視病人' : '目前無已完成病人';
+    c.innerHTML=`<div class="empty"><div class="ei" style="font-size:42px;opacity:.3">—</div><h3>${msg}</h3></div>`;
+    return;
+  }
+
+  function ptCard(p) {
+    const isHigh = parseInt(p.swift_total||0)>=15;
+    const hasInt = parseInt(p.intervention_count||0)>0;
+    const done48 = !!p.v48_id, done24 = !!p.v24_id;
+    const dot = hasInt?'dalert':done48?'dok':'dpend';
+    const cc  = hasInt?'calert':done48?'cok':'cpend';
+    const ct  = hasInt?'需介入':done48?'已完成':'待追蹤';
+    const vis = done48?'追蹤完成 ✓':done24?'48hr 待訪視':'24hr 待訪視';
+    const avBg = isHigh?'':'style="background:var(--teal)"';
+    const sc   = isHigh?'calert':'cok';
+    return `<div class="ptr" onclick="openPt('${p.id}')">
+      <div class="ptav" ${avBg}>${p.name.slice(-2)}</div>
+      <div class="pti">
+        <div class="ptn">${p.name}
+          <span class="chip ${cc}" style="font-size:13px">${ct}</span>
+          <span class="chip ${sc}" style="font-size:13px">SWIFT ${p.swift_total||0}</span>
+        </div>
+        <div class="ptm">${p.mrn} · ${p.bed||'—'} · ${p.transfer_unit||'—'}</div>
+        <div class="ptm">轉出：${p.transfer_date} · ${vis}</div>
+      </div>
+      <div class="sdot ${dot}"></div>
+    </div>`;
+  }
+
+  const high = filtered.filter(p=>parseInt(p.swift_total||0)>=15);
+  const low  = filtered.filter(p=>parseInt(p.swift_total||0)<15);
+  let out = '';
+
+  if (high.length) {
+    out += `<div style="display:flex;align-items:center;gap:8px;padding:10px 16px 6px;border-bottom:1px solid var(--g2)">
+      <span style="font-size:13px;font-weight:700;color:var(--red)">高風險（SWIFT ≥15）</span>
+      <span class="chip calert" style="font-size:12px">${high.length} 人</span>
+    </div>`;
+    out += high.map(ptCard).join('');
+  }
+  if (low.length) {
+    out += `<div style="display:flex;align-items:center;gap:8px;padding:10px 16px 6px;border-bottom:1px solid var(--g2);${high.length?'border-top:2px solid var(--g2)':''}">
+      <span style="font-size:13px;font-weight:700;color:var(--teal)">低風險（SWIFT &lt;15）</span>
+      <span class="chip cok" style="font-size:12px">${low.length} 人</span>
+    </div>`;
+    out += low.map(ptCard).join('');
+  }
+  c.innerHTML = out;
+}
+
 async function loadList() {
   const { data: pts, error } = await sb
     .from('patients_view')
@@ -664,75 +753,12 @@ async function loadList() {
     .order('swift_total', {ascending:false})
     .order('transfer_date', {ascending:false});
   if (error) { toast('載入失敗：'+error.message); return; }
-  const c = document.getElementById('pt-list');
-  if (!pts || !pts.length) {
-    c.innerHTML='<div class="empty"><div class="ei" style="font-size:42px;opacity:.3">—</div><h3>尚無追蹤病人</h3><p>點擊右上角「＋ 新增」開始建立記錄</p></div>';
-    return;
-  }
-
-  function ptRow(p) {
-    const hasInt = parseInt(p.intervention_count||0)>0;
-    const done48 = !!p.v48_id, done24 = !!p.v24_id;
-    const dot = hasInt?'dalert':done48?'dok':'dpend';
-    const cc  = hasInt?'calert':done48?'cok':'cpend';
-    const ct  = hasInt?'需介入':done48?'已完成':'待追蹤';
-    const vis = done48?'追蹤完成 ✓':done24?'48hr 待訪視':'24hr 待訪視';
-    return `<div class="ptr" onclick="openPt('${p.id}')">
-      <div class="ptav">${p.name.slice(-2)}</div>
-      <div class="pti">
-        <div class="ptn">${p.name}
-          <span class="chip ${cc}" style="font-size:20px">${ct}</span>
-          <span class="chip calert" style="font-size:20px">SWIFT ${p.swift_total||0}</span>
-        </div>
-        <div class="ptm">${p.mrn} · ${p.bed||'—'} · ${p.transfer_unit||'—'}</div>
-        <div class="ptm">轉出：${p.transfer_date} · ${vis}</div>
-      </div>
-      <div class="sdot ${dot}"></div>
-    </div>`;
-  }
-  function ptRowLow(p) {
-    const hasInt = parseInt(p.intervention_count||0)>0;
-    const done48 = !!p.v48_id, done24 = !!p.v24_id;
-    const dot = hasInt?'dalert':done48?'dok':'dpend';
-    const cc  = hasInt?'calert':done48?'cok':'cpend';
-    const ct  = hasInt?'需介入':done48?'已完成':'待追蹤';
-    const vis = done48?'追蹤完成 ✓':done24?'48hr 待訪視':'24hr 待訪視';
-    return `<div class="ptr" onclick="openPt('${p.id}')">
-      <div class="ptav" style="background:var(--teal)">${p.name.slice(-2)}</div>
-      <div class="pti">
-        <div class="ptn">${p.name}
-          <span class="chip ${cc}" style="font-size:20px">${ct}</span>
-          <span class="chip cok" style="font-size:20px">SWIFT ${p.swift_total||0}</span>
-        </div>
-        <div class="ptm">${p.mrn} · ${p.bed||'—'} · ${p.transfer_unit||'—'}</div>
-        <div class="ptm">轉出：${p.transfer_date} · ${vis}</div>
-      </div>
-      <div class="sdot ${dot}"></div>
-    </div>`;
-  }
-
-  const high = pts.filter(p=>parseInt(p.swift_total||0)>=15);
-  const low  = pts.filter(p=>parseInt(p.swift_total||0)<15);
-
-  let html = '';
-
-  if (high.length) {
-    html += `<div style="display:flex;align-items:center;gap:8px;padding:10px 16px 6px;border-bottom:1px solid var(--g2)">
-      <span style="font-size:21px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--red)">高風險（SWIFT ≥15）</span>
-      <span class="chip calert" style="font-size:20px">${high.length} 人</span>
-    </div>`;
-    html += high.map(ptRow).join('');
-  }
-
-  if (low.length) {
-    html += `<div style="display:flex;align-items:center;gap:8px;padding:10px 16px 6px;border-bottom:1px solid var(--g2);${high.length?'border-top:1px solid var(--g2);margin-top:4px':''}">
-      <span style="font-size:21px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--teal)">低風險（SWIFT &lt;15）</span>
-      <span class="chip cok" style="font-size:20px">${low.length} 人</span>
-    </div>`;
-    html += low.map(ptRowLow).join('');
-  }
-
-  c.innerHTML = html;
+  window._cachedPts = pts || [];
+  const pending = (pts||[]).filter(p=>!p.v48_id);
+  const done    = (pts||[]).filter(p=>!!p.v48_id);
+  document.getElementById('lt-pending-count').textContent = pending.length;
+  document.getElementById('lt-done-count').textContent    = done.length;
+  renderList(window._cachedPts);
 }
 
 // ══════════════════════════════════════════════════════════
