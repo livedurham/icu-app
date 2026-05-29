@@ -1077,14 +1077,8 @@ async function exportCSV() {
   const rows=await getExportData();
   if (!rows.length) { toast('沒有符合條件的資料'); return; }
   const rapidL=v=>v==='pass'?'通過':v==='fail'?'未達標':'未填';
-  const rtL=(v,k)=>{ if(v===null||v===undefined||v==='') return '未填'; const item=RT_ITEMS.find(d=>d.k===k); return item?`${v}分－${item.opts[Number(v)]}`:`${v}分`; };
-  const rtTotal2=(ph,bs,rr,cg,ox)=>{
-    const vals=[ph,bs,rr,cg,ox];
-    if(vals.some(v=>v===null||v===undefined||v==='')) return '—';
-    const t=vals.reduce((a,b)=>a+Number(b),0);
-    const risk=t<=5?'低風險':t<=10?'中風險':t<=15?'高風險':'極高風險';
-    return t+'分（'+risk+'）';
-  };
+  const rtL=v=>(v===null||v===undefined||v==='')?'':String(v);
+  const rtTotal2=(ph,bs,rr,cg,ox)=>{ const vals=[ph,bs,rr,cg,ox]; if(vals.some(v=>v===null||v===undefined||v==='')) return ''; return vals.reduce((a,b)=>a+Number(b),0); };
   const iL=(row,p)=>{
     const m={[p+'_pt']:'胸腔物理治療',[p+'_neb']:'噴霧治療',
              [p+'_suction']:'抽痰',[p+'_o2']:'氧氣調整',[p+'_consult']:'胸腔科會診'};
