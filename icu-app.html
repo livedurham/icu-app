@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0B3D6B">
+<title>ICU 轉出與訪查系統</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap');
+:root{
+  --navy:#0B3D6B;--navy2:#1560A8;--navy3:#D6E8F7;
+  --teal:#0E7C6A;--teal2:#D4F0EB;
+  --green:#166534;--green2:#DCFCE7;
+  --red:#B91C1C;--red2:#FEE2E2;
+  --amber:#92400E;--amber2:#FEF3C7;
+  --purple:#5B21B6;--purple2:#EDE9FE;
+  --g1:#F8F9FB;--g2:#EEF0F4;--g3:#D8DCE4;--g4:#9BA3AF;--g6:#4B5563;--g8:#1F2937;
+  --white:#FFF;
+  --sh:0 1px 3px rgba(0,0,0,.08),0 1px 8px rgba(0,0,0,.04);
+  --shm:0 4px 24px rgba(0,0,0,.12);
+  --r:14px;--rs:9px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{font-family:'DM Sans','Noto Sans TC',sans-serif;background:var(--g1);color:var(--g8);display:flex;flex-direction:column}
+
+/* ── LOGIN ── */
+#login-screen{
+  position:fixed;inset:0;z-index:999;
+  background:linear-gradient(150deg,#051B35 0%,#0B3D6B 45%,#0E7C6A 100%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 24px;
+}
+.login-logo{text-align:center;margin-bottom:36px}
+.login-logo .icon{display:block;margin-bottom:12px;}
+.login-logo h1{font-size:24px;font-weight:700;color:white;letter-spacing:-.01em}
+.login-logo p{font-size:13px;color:rgba(255,255,255,.55);margin-top:5px}
+.login-box{background:white;border-radius:20px;padding:28px 22px;width:100%;max-width:380px;box-shadow:0 24px 64px rgba(0,0,0,.3)}
+.lf{margin-bottom:16px}
+.lf label{display:block;font-size:11px;font-weight:700;color:var(--g4);margin-bottom:6px;letter-spacing:.08em;text-transform:uppercase}
+.lf input{width:100%;padding:13px 14px;border:1.5px solid var(--g2);border-radius:var(--rs);font-size:15px;font-family:inherit;background:var(--g1);color:var(--g8);outline:none;transition:border .15s,background .15s;-webkit-appearance:none}
+.lf input:focus{border-color:var(--navy2);background:white}
+.btn-login{width:100%;padding:14px;border-radius:var(--rs);background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);color:white;border:none;font-size:16px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:6px;letter-spacing:.01em}
+.login-err{background:var(--red2);color:var(--red);font-size:13px;padding:10px 14px;border-radius:var(--rs);margin-top:12px;text-align:center;display:none}
+.login-hint{font-size:11px;color:var(--g4);text-align:center;margin-top:14px}
+
+/* ── APP SHELL ── */
+#app{display:flex;flex-direction:column;height:100%;display:none}
+.topbar{background:var(--navy);padding:env(safe-area-inset-top) 0 0;flex-shrink:0}
+.topbar-inner{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 12px}
+.topbar h1{font-size:16px;font-weight:700;color:white;letter-spacing:.01em}
+.topbar small{font-size:11px;color:rgba(255,255,255,.5);display:block;margin-top:1px}
+.nb{background:rgba(255,255,255,.14);border:none;color:white;border-radius:8px;padding:7px 13px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer}
+
+.pages{flex:1;overflow:hidden;position:relative}
+.page{position:absolute;inset:0;overflow-y:auto;padding:14px 14px 90px;display:none}
+.page.active{display:block}
+
+/* ── BOTTOM NAV ── */
+.bottomnav{background:white;border-top:1px solid var(--g2);display:flex;padding:6px 0;padding-bottom:max(6px,env(safe-area-inset-bottom));flex-shrink:0;box-shadow:0 -2px 16px rgba(0,0,0,.07)}
+.bntab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;border:none;background:none;cursor:pointer;padding:5px 0;font-size:10px;color:var(--g4);font-family:inherit;transition:color .15s}
+.bntab.on{color:var(--navy)}
+.bntab .ico{font-size:22px;line-height:1}
+
+/* ── CARDS ── */
+.card{background:white;border-radius:var(--r);box-shadow:var(--sh);margin-bottom:10px;overflow:hidden}
+.ch{padding:13px 16px 11px;border-bottom:1px solid var(--g2);display:flex;align-items:center;justify-content:space-between}
+.ct{font-size:14px;font-weight:700;color:var(--g8)}
+.cb{padding:14px 16px}
+
+/* ── FORMS ── */
+.fl{display:block;font-size:11px;font-weight:700;color:var(--g4);margin-bottom:5px;letter-spacing:.07em;text-transform:uppercase}
+input[type=text],input[type=date],input[type=password],select,textarea{width:100%;padding:11px 13px;border:1.5px solid var(--g2);border-radius:var(--rs);font-size:15px;font-family:inherit;background:var(--g1);color:var(--g8);outline:none;transition:border .15s;-webkit-appearance:none;appearance:none}
+input:focus,select:focus,textarea:focus{border-color:var(--navy2);background:white}
+textarea{resize:none}
+.fr{margin-bottom:13px}
+.g2c{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* ── BUTTONS ── */
+.bp{width:100%;padding:14px;border-radius:var(--r);background:var(--navy);color:white;border:none;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:.01em}
+.bp:active{opacity:.85}
+.bsm{padding:7px 15px;border-radius:var(--rs);background:var(--navy);color:white;border:none;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer}
+.bdanger{padding:7px 15px;border-radius:var(--rs);background:var(--red2);color:var(--red);border:1px solid #FCA5A5;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer}
+.bwarn{padding:7px 15px;border-radius:var(--rs);background:var(--amber2);color:var(--amber);border:1px solid #FCD34D;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer}
+
+/* ── CHIPS ── */
+.chip{display:inline-block;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;white-space:nowrap}
+.cok{background:var(--green2);color:var(--green)}
+.calert{background:var(--red2);color:var(--red)}
+.cpend{background:var(--amber2);color:var(--amber)}
+.cnavy{background:var(--navy3);color:var(--navy)}
+.cgray{background:var(--g2);color:var(--g6)}
+.cpurple{background:var(--purple2);color:var(--purple)}
+
+/* ── RAPID ── */
+.ri{display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid var(--g2)}
+.ri:last-child{border-bottom:none}
+.rl{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;flex-shrink:0}
+.rtxt{flex:1;min-width:0}
+.rtxt strong{font-size:13px;display:block;font-weight:600}
+.rtxt span{font-size:11px;color:var(--g4)}
+.rbtns{display:flex;gap:5px}
+.rb{width:36px;height:36px;border-radius:8px;border:1.5px solid var(--g2);background:var(--g1);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+.rb.rp{background:var(--green2);border-color:#86EFAC}
+.rb.rf{background:var(--red2);border-color:#FCA5A5}
+
+/* ── SWIFT ── */
+.swr{display:flex;align-items:center;padding:10px 0;border-bottom:1px solid var(--g2)}
+.swr:last-child{border-bottom:none}
+.swl{flex:1;font-size:13px}
+.swl small{display:block;font-size:11px;color:var(--g4)}
+.swsel{width:136px;flex-shrink:0;padding:8px 10px;border:1.5px solid var(--g2);border-radius:var(--rs);font-size:12px;font-family:inherit;background:var(--g1);-webkit-appearance:none;appearance:none;color:var(--g8);outline:none}
+.swsel:focus{border-color:var(--navy2);background:white}
+.swift-box{background:var(--navy);color:white;border-radius:var(--rs);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;margin-top:8px}
+.swift-box .big{font-size:38px;font-weight:800;line-height:1}
+
+/* ── PT LIST ── */
+.ptr{padding:13px 16px;border-bottom:1px solid var(--g2);display:flex;align-items:center;gap:12px;cursor:pointer;transition:background .1s}
+.ptr:last-child{border-bottom:none}
+.ptr:active{background:var(--g1)}
+.ptav{width:42px;height:42px;border-radius:50%;background:var(--navy);color:white;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex-shrink:0}
+.pti{flex:1;min-width:0}
+.ptn{font-size:14px;font-weight:700;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.ptm{font-size:11px;color:var(--g4);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sdot{width:9px;height:9px;border-radius:50%;flex-shrink:0;margin-top:2px}
+.dok{background:var(--green)}
+.dpend{background:var(--amber)}
+.dalert{background:var(--red)}
+
+/* ── INT BUTTONS ── */
+.ibt{padding:9px 12px;border-radius:var(--rs);border:1.5px solid var(--g2);background:var(--g1);font-size:12px;font-family:inherit;cursor:pointer;color:var(--g6);transition:all .15s;white-space:nowrap}
+.ibt.on{background:var(--navy3);border-color:var(--navy2);color:var(--navy);font-weight:600}
+
+/* ── INFO ROWS ── */
+.ir{display:flex;justify-content:space-between;align-items:center;padding:7px 0}
+.ir .k{font-size:12px;color:var(--g4)}
+.ir .v{font-size:13px;font-weight:600;text-align:right;max-width:60%}
+.dv{height:1px;background:var(--g2);margin:1px 0}
+.stitle{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--g4);margin:18px 0 8px}
+.stitle:first-child{margin-top:0}
+
+/* ── STATS ── */
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.scard{background:white;border-radius:var(--r);padding:14px 16px;box-shadow:var(--sh)}
+.snum{font-size:28px;font-weight:800;line-height:1.1}
+.slbl{font-size:11px;color:var(--g4);margin-top:3px}
+
+/* ── OVERLAY ── */
+.ov{display:none;position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.5);overflow-y:auto;padding-top:32px}
+.ov.open{display:block}
+.ovcard{background:white;border-radius:22px 22px 0 0;min-height:calc(100vh - 32px);padding:20px 16px 100px}
+.ovhandle{width:38px;height:4px;background:var(--g2);border-radius:2px;margin:0 auto 20px}
+.ovtitle{font-size:19px;font-weight:800;letter-spacing:-.01em}
+.ovsub{font-size:12px;color:var(--g4);margin-top:3px;margin-bottom:20px}
+
+/* ── USER LIST ── */
+.ur{padding:12px 16px;border-bottom:1px solid var(--g2);display:flex;align-items:center;gap:10px}
+.ur:last-child{border-bottom:none}
+.uav{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
+.un{font-size:13px;font-weight:600}
+.um{font-size:11px;color:var(--g4);margin-top:1px}
+
+/* ── EMPTY ── */
+.empty{text-align:center;padding:52px 20px;color:var(--g4)}
+.empty .ei{font-size:48px;margin-bottom:12px}
+.empty h3{font-size:16px;font-weight:700;color:var(--g6);margin-bottom:6px}
+.empty p{font-size:13px}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:rgba(15,30,50,.92);color:white;padding:10px 20px;border-radius:22px;font-size:13px;z-index:999;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap;backdrop-filter:blur(8px)}
+.toast.show{opacity:1}
+
+/* ── VISIT STATUS TIMELINE ── */
+.vtl{display:flex;gap:0;margin:0 16px 14px;border-radius:var(--rs);overflow:hidden;border:1px solid var(--g2)}
+.vtlitem{flex:1;padding:10px 8px;text-align:center;font-size:12px;font-weight:600;background:var(--g1);color:var(--g4);transition:all .2s}
+.vtlitem.done{background:var(--green2);color:var(--green)}
+.vtlitem.pending{background:var(--amber2);color:var(--amber)}
+.vtlitem:not(:last-child){border-right:1px solid var(--g2)}
+.vtlitem .vt-icon{display:block;font-size:18px;margin-bottom:2px}
+
+/* ── MODAL (Admin password reset) ── */
+.modal{display:none;position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.5);align-items:center;justify-content:center;padding:20px}
+.modal.open{display:flex}
+.mbox{background:white;border-radius:var(--r);padding:22px 20px;width:100%;max-width:340px}
+.mtitle{font-size:16px;font-weight:700;margin-bottom:16px}
+</style>
+</head>
+<body>
+
+<!-- ════════════ LOGIN ════════════ -->
+<div id="login-screen">
+  <div class="login-logo">
+    <svg class="icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:56px;height:56px;display:block;margin:0 auto 12px;filter:drop-shadow(0 4px 12px rgba(0,0,0,.3))">
+  <rect width="64" height="64" rx="16" fill="rgba(255,255,255,0.15)"/>
+  <polyline points="8,32 18,32 22,20 27,44 32,28 37,36 41,32 56,32" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</svg>
+    <h1>ICU 轉出與訪查系統</h1>
+    <p>新光吳火獅紀念醫院 · 品質改善專案</p>
+  </div>
+  <div class="login-box">
+    <div class="lf"><label>員工編號</label><input type="text" id="l-id" placeholder="例如：RT00123" autocapitalize="off" autocomplete="username"></div>
+    <div class="lf"><label>密碼</label><input type="password" id="l-pw" placeholder="請輸入密碼" autocomplete="current-password" onkeydown="if(event.key==='Enter')login()"></div>
+    <button class="btn-login" onclick="login()">登　入</button>
+    <div class="login-err" id="l-err"></div>
+    <div class="login-hint">忘記密碼請聯絡管理員</div>
+  </div>
+</div>
+
+<!-- ════════════ APP ════════════ -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div>
+        <h1 id="tb-title">ICU 轉出追蹤</h1>
+        <small id="tb-user"></small>
+      </div>
+      <div style="display:flex;gap:7px">
+        <button class="nb" id="tb-action" onclick="tbAction()">＋ 新增</button>
+        <button class="nb" onclick="logout()">登出</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="pages">
+    <!-- 追蹤列表 -->
+    <div class="page active" id="pg-list">
+      <div class="card"><div id="pt-list"></div></div>
+    </div>
+
+    <!-- 新增病人 -->
+    <div class="page" id="pg-add">
+      <div class="card">
+        <div class="ch"><span class="ct">📋 基本資料</span></div>
+        <div class="cb">
+          <div class="g2c">
+            <div class="fr"><label class="fl">病人姓名 *</label><input type="text" id="a-name" placeholder="王小明"></div>
+            <div class="fr"><label class="fl">病歷號碼 *</label><input type="text" id="a-mrn" placeholder="A123456"></div>
+          </div>
+          <div class="g2c">
+            <div class="fr"><label class="fl">床號</label><input type="text" id="a-bed" placeholder="MICU-05"></div>
+            <div class="fr"><label class="fl">轉出單位</label>
+              <select id="a-unit"><option value="">選擇病房</option>
+                <option>MICU 內科加護病房</option>
+                <option>SICU 外科加護病房</option>
+                <option>NRICU 神經外科加護病房</option>
+                <option>CCU 心臟加護病房</option>
+                <option>其他</option>
+              </select>
+            </div>
+          </div>
+          <div class="g2c">
+            <div class="fr"><label class="fl">轉出日期 *</label><input type="date" id="a-date"></div>
+            <div class="fr"><label class="fl">ICU 住院天數</label><input type="text" id="a-days" placeholder="7"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RAPID-ICU -->
+      <div class="card">
+        <div class="ch"><span class="ct">🫁 RAPID-ICU 評估</span><span class="chip cnavy" id="rc">0/5</span></div>
+        <div id="rapid-add"></div>
+      </div>
+
+      <!-- SWIFT -->
+      <div class="card">
+        <div class="ch">
+          <span class="ct">📊 SWIFT Score</span>
+          <div style="display:flex;align-items:baseline;gap:3px">
+            <span id="sw-live" style="font-size:22px;font-weight:800;color:var(--navy)">0</span>
+            <span style="font-size:11px;color:var(--g4)">/64分</span>
+          </div>
+        </div>
+        <div style="padding:0 16px 10px">
+          <div class="swr"><div class="swl">入院來源<small>急診 / 病房或轉院</small></div>
+            <select class="swsel" id="sw-src" onchange="calcSw()"><option value="0">急診（0）</option><option value="8">病房/轉院（8）</option></select></div>
+          <div class="swr"><div class="swl">ICU 住院天數</div>
+            <select class="swsel" id="sw-los" onchange="calcSw()"><option value="0">&lt;2天（0）</option><option value="1">2–10天（1）</option><option value="14">&gt;10天（14）</option></select></div>
+          <div class="swr"><div class="swl">GCS 意識狀態</div>
+            <select class="swsel" id="sw-gcs" onchange="calcSw()"><option value="0">&gt;14（0）</option><option value="6">11–14（6）</option><option value="14">8–10（14）</option><option value="24">&lt;8（24）</option></select></div>
+          <div class="swr"><div class="swl">PaO₂/FiO₂</div>
+            <select class="swsel" id="sw-pf" onchange="calcSw()"><option value="0">&gt;400（0）</option><option value="5">150–400（5）</option><option value="10">100–150（10）</option><option value="13">&lt;100（13）</option></select></div>
+          <div class="swr"><div class="swl">PaCO₂</div>
+            <select class="swsel" id="sw-pco2" onchange="calcSw()"><option value="0">&lt;45mmHg（0）</option><option value="5">≥45mmHg（5）</option></select></div>
+          <div class="swift-box">
+            <div><div style="font-size:11px;opacity:.65">SWIFT 總分</div><div class="big" id="sw-big">0</div></div>
+            <div id="sw-risk" class="chip cok">低風險</div>
+          </div>
+        </div>
+      </div>
+      <button class="bp" onclick="savePt()">💾 儲存病人資料</button>
+      <div style="height:14px"></div>
+    </div>
+
+    <!-- 儀表板 -->
+    <div class="page" id="pg-dash">
+      <div class="sgrid">
+        <div class="scard"><div class="snum" id="d-total" style="color:var(--navy)">—</div><div class="slbl">追蹤中病人</div></div>
+        <div class="scard"><div class="snum" id="d-swift" style="color:var(--red)">—</div><div class="slbl">SWIFT 高風險</div></div>
+        <div class="scard"><div class="snum" id="d-24h" style="color:var(--teal)">—</div><div class="slbl">24hr 完成率</div></div>
+        <div class="scard"><div class="snum" id="d-48h" style="color:var(--green)">—</div><div class="slbl">48hr 完成率</div></div>
+      </div>
+      <div class="stitle">介入統計</div>
+      <div class="card"><div class="cb">
+        <div class="ir"><span class="k">🫁 胸腔物理治療</span><span class="v" id="di-pt">—</span></div><div class="dv"></div>
+        <div class="ir"><span class="k">💨 噴霧治療</span><span class="v" id="di-neb">—</span></div><div class="dv"></div>
+        <div class="ir"><span class="k">🩺 抽痰</span><span class="v" id="di-suct">—</span></div><div class="dv"></div>
+        <div class="ir"><span class="k">🌬 氧氣調整</span><span class="v" id="di-o2">—</span></div><div class="dv"></div>
+        <div class="ir"><span class="k">🏥 胸腔科會診</span><span class="v" id="di-con">—</span></div>
+      </div></div>
+      <div class="stitle">RAPID-ICU 通過率</div>
+      <div class="card"><div class="cb">
+        <div class="ir"><span class="k">R 呼吸頻率</span><span class="v" id="dr-R">—</span></div><div class="dv"></div>
+        <div class="ir"><span class="k">A 呼吸道保護</span><span class="v" id="dr-A">—</span></div><div class="dv"></div>
+        <div class="ir"><span class="k">P 脫管穩定</span><span class="v" id="dr-P">—</span></div><div class="dv"></div>
+        <div class="ir"><span class="k">I 氧氣需求</span><span class="v" id="dr-I">—</span></div><div class="dv"></div>
+        <div class="ir"><span class="k">D 分泌物減少</span><span class="v" id="dr-D">—</span></div>
+      </div></div>
+    </div>
+
+    <!-- 帳號管理 (admin only) -->
+    <div class="page" id="pg-admin">
+      <div class="card">
+        <div class="ch"><span class="ct">新增使用者帳號</span></div>
+        <div class="cb">
+          <div class="g2c">
+            <div class="fr"><label class="fl">員工編號 *</label><input type="text" id="u-eid" placeholder="RT00123" autocapitalize="off"></div>
+            <div class="fr"><label class="fl">姓名 *</label><input type="text" id="u-name" placeholder="陳小明"></div>
+          </div>
+          <div class="g2c">
+            <div class="fr"><label class="fl">密碼 *</label><input type="password" id="u-pw" placeholder="至少8字元"></div>
+            <div class="fr"><label class="fl">角色</label>
+              <select id="u-role"><option value="rt">RT 呼吸治療師</option><option value="nurse">護理師</option><option value="admin">管理員</option></select>
+            </div>
+          </div>
+          <div class="fr"><label class="fl">部門</label><input type="text" id="u-dept" placeholder="加護病房"></div>
+          <button class="bp" onclick="addUser()">新增帳號</button>
+        </div>
+      </div>
+      <div class="stitle">現有帳號</div>
+      <div class="card"><div id="u-list"></div></div>
+    </div>
+
+    <!-- 匯出 CSV -->
+    <div class="page" id="pg-export">
+      <div class="card">
+        <div class="ch"><span class="ct">📥 匯出 CSV</span></div>
+        <div class="cb">
+          <div class="fr">
+            <label class="fl">轉出單位篩選</label>
+            <select id="ex-unit">
+              <option value="">全部單位</option>
+              <option>MICU 內科加護病房</option>
+              <option>SICU 外科加護病房</option>
+              <option>NRICU 神經外科加護病房</option>
+              <option>CCU 心臟加護病房</option>
+              <option>其他</option>
+            </select>
+          </div>
+          <div class="g2c">
+            <div class="fr"><label class="fl">開始日期</label><input type="date" id="ex-from"></div>
+            <div class="fr"><label class="fl">結束日期</label><input type="date" id="ex-to"></div>
+          </div>
+          <div class="fr">
+            <label class="fl">狀態篩選</label>
+            <select id="ex-status">
+              <option value="">全部</option>
+              <option value="pending">待追蹤</option>
+              <option value="done">已完成</option>
+              <option value="alert">有介入措施</option>
+            </select>
+          </div>
+          <div id="ex-preview" style="font-size:13px;color:var(--g4);margin-bottom:14px;padding:10px 12px;background:var(--g1);border-radius:var(--rs)">篩選後共 <span id="ex-count" style="font-weight:700;color:var(--navy)">0</span> 筆記錄</div>
+          <button class="bp" onclick="exportCSV()">📥 下載 CSV 檔案</button>
+        </div>
+      </div>
+      <div class="stitle">匯出欄位說明</div>
+      <div class="card"><div class="cb" style="padding:12px 16px">
+        <div style="font-size:12px;color:var(--g6);line-height:2">
+          病歷號碼、病人姓名、床號、轉出單位、轉出日期、ICU住院天數<br>
+          SWIFT總分、SWIFT風險等級<br>
+          RAPID-R/A/P/I/D（各項pass/fail）<br>
+          24hr訪視時間、24hr訪視者、24hr介入措施、24hr備註<br>
+          48hr訪視時間、48hr訪視者、48hr介入措施、48hr備註<br>
+          建立者、建立時間
+        </div>
+      </div></div>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div class="bottomnav">
+    <button class="bntab on" id="t-list" onclick="go('list')"><span class="ico">🏥</span>追蹤列表</button>
+    <button class="bntab" id="t-dash" onclick="go('dash')"><span class="ico">📊</span>儀表板</button>
+    <button class="bntab" id="t-export" onclick="go('export')"><span class="ico">📥</span>匯出</button>
+    <button class="bntab" id="t-admin" onclick="go('admin')" style="display:none"><span class="ico">⚙️</span>帳號管理</button>
+  </div>
+</div>
+
+<!-- ════════════ PATIENT DETAIL OVERLAY ════════════ -->
+<div class="ov" id="ov-pt">
+  <div class="ovcard">
+    <div class="ovhandle"></div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px">
+      <div><div class="ovtitle" id="ov-name"></div><div class="ovsub" id="ov-sub"></div></div>
+      <button onclick="closeOv()" style="background:var(--g1);border:none;border-radius:8px;padding:6px 12px;font-size:12px;color:var(--g6);cursor:pointer;font-family:inherit;font-weight:600">✕ 關閉</button>
+    </div>
+    <!-- visit timeline status bar -->
+    <div class="vtl" id="ov-vtl">
+      <div class="vtlitem" id="vtl-pre"><span class="vt-icon">📋</span>轉出前評估</div>
+      <div class="vtlitem" id="vtl-24"><span class="vt-icon">⏰</span>24hr 訪視</div>
+      <div class="vtlitem" id="vtl-48"><span class="vt-icon">✅</span>48hr 訪視</div>
+    </div>
+    <div class="stitle">基本資料</div>
+    <div class="card"><div class="cb" style="padding:10px 16px" id="ov-basic"></div></div>
+    <div class="stitle">24hr RT 訪視</div>
+    <div class="card"><div id="ov-v24"></div></div>
+    <div class="stitle">48hr RT 訪視</div>
+    <div class="card"><div id="ov-v48"></div></div>
+    <div style="height:12px"></div>
+    <div id="ov-del"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// ══════════════════════════════════════════════════════════
+// ⚙️  設定區 — 部署前填入你的 Supabase 資料
+// ══════════════════════════════════════════════════════════
+const SUPABASE_URL  = 'https://cdrvvxyxdaacooaqqrqu.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkcnZ2eHl4ZGFhY29vYXFxcnF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAwNDEzODUsImV4cCI6MjA5NTYxNzM4NX0.8KcmGwzxM9v7Ce8C_7lRTd05Crlabm0wiPCVnNZ5lH8';
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+// ══════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════
+let CU      = null;   // current user profile
+let ovPtId  = null;
+
+const RAPID_DEF = [
+  {k:'R',l:'呼吸頻率',    s:'12–20次/分，無輔助肌', bg:'#D4F0EB',cl:'#0E7C6A'},
+  {k:'A',l:'呼吸道保護',  s:'嗆咳正常，可自清分泌物',bg:'#D6E8F7',cl:'#0B3D6B'},
+  {k:'P',l:'脫管穩定度',  s:'脫離呼吸器 ≥24hr',    bg:'#EDE9FE',cl:'#5B21B6'},
+  {k:'I',l:'氧氣需求',    s:'SpO₂≥94%（低流量/RA）',bg:'#FEF3C7',cl:'#92400E'},
+  {k:'D',l:'分泌物減少',  s:'抽痰間隔 ≥4小時',     bg:'#DCFCE7',cl:'#166534'},
+];
+const INT_DEF = [
+  {k:'int_pt',      l:'🫁 胸腔物理治療'},
+  {k:'int_neb',     l:'💨 噴霧治療'},
+  {k:'int_suction', l:'🩺 抽痰'},
+  {k:'int_o2',      l:'🌬 氧氣調整'},
+  {k:'int_consult', l:'🏥 胸腔科會診'},
+];
+const rapidAdd = {R:null,A:null,P:null,I:null,D:null};
+const rapidV   = {'24h':{R:null,A:null,P:null,I:null,D:null},
+                  '48h':{R:null,A:null,P:null,I:null,D:null}};
+
+// ══════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════
+async function init() {
+  // 檢查是否已登入
+  const { data:{ session } } = await sb.auth.getSession();
+  if (session) {
+    await loadProfile(session.user.id);
+    if (CU) { showApp(); return; }
+  }
+  showLogin();
+}
+
+async function loadProfile(uid) {
+  const { data } = await sb.from('profiles').select('*').eq('id', uid).single();
+  if (data && data.is_active !== false) CU = data;
+}
+
+function showLogin() {
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+}
+function showApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  document.getElementById('tb-user').textContent = CU.name + '（' + roleL(CU.role) + '）';
+  document.getElementById('t-admin').style.display = CU.role==='admin' ? 'flex' : 'none';
+  buildRapidUI('rapid-add', rapidAdd, 'a');
+  document.getElementById('a-date').value = today();
+  go('list');
+}
+
+// ══════════════════════════════════════════════════════════
+// AUTH
+// ══════════════════════════════════════════════════════════
+async function login() {
+  const btn = document.querySelector('.btn-login');
+  const err = document.getElementById('l-err');
+  // 員工編號當 email: EID@ms.skh.org.tw
+  const eid = document.getElementById('l-id').value.trim().toUpperCase();
+  const pw  = document.getElementById('l-pw').value;
+  if (!eid || !pw) { showErr('請輸入員工編號及密碼'); return; }
+  btn.textContent = '登入中…'; btn.disabled = true; err.style.display = 'none';
+  try {
+    const email = eid + '@ms.skh.org.tw';
+    const { data, error } = await sb.auth.signInWithPassword({ email, password: pw });
+    if (error) throw new Error('員工編號或密碼錯誤');
+    await loadProfile(data.user.id);
+    if (!CU) throw new Error('帳號已停用，請聯絡管理員');
+    showApp();
+  } catch(e) { showErr(e.message); }
+  finally    { btn.textContent = '登　入'; btn.disabled = false; }
+}
+function showErr(msg) {
+  const e = document.getElementById('l-err');
+  e.textContent = msg; e.style.display = 'block';
+}
+async function logout() {
+  await sb.auth.signOut();
+  CU = null;
+  showLogin();
+}
+
+function roleL(r) { return {admin:'管理員',rt:'RT',nurse:'護理師'}[r] || r; }
+function today()  { return new Date().toISOString().split('T')[0]; }
+
+// ══════════════════════════════════════════════════════════
+// PAGE ROUTING
+// ══════════════════════════════════════════════════════════
+function go(p) {
+  ['list','add','dash','export','admin'].forEach(x =>
+    document.getElementById('pg-'+x).classList.toggle('active', x===p));
+  document.querySelectorAll('.bntab').forEach(t => t.classList.remove('on'));
+  const tmap = {list:'t-list',dash:'t-dash',export:'t-export',admin:'t-admin'};
+  if (tmap[p]) document.getElementById(tmap[p])?.classList.add('on');
+  const btn = document.getElementById('tb-action');
+  if      (p==='list')   { btn.textContent='＋ 新增'; loadList(); }
+  else if (p==='add')    { btn.textContent='← 返回'; resetAdd(); }
+  else if (p==='dash')   { btn.textContent='↺ 重整'; loadDash(); }
+  else if (p==='export') { btn.textContent='← 返回'; initExport(); }
+  else if (p==='admin')  { btn.textContent='← 返回'; loadUsers(); }
+  btn.onclick = (p==='add'||p==='admin'||p==='export') ? ()=>go('list')
+              : p==='dash' ? loadDash : ()=>go('add');
+}
+function tbAction() { document.getElementById('tb-action').onclick(); }
+
+// ══════════════════════════════════════════════════════════
+// RAPID UI
+// ══════════════════════════════════════════════════════════
+function buildRapidUI(cid, state, prefix) {
+  document.getElementById(cid).innerHTML = RAPID_DEF.map(d => `
+    <div class="ri">
+      <div class="rl" style="background:${d.bg};color:${d.cl}">${d.k}</div>
+      <div class="rtxt"><strong>${d.l}</strong><span>${d.s}</span></div>
+      <div class="rbtns">
+        <button class="rb" id="${prefix}${d.k}p" onclick="setR('${prefix}','${d.k}','pass')">✓</button>
+        <button class="rb" id="${prefix}${d.k}f" onclick="setR('${prefix}','${d.k}','fail')">✗</button>
+      </div>
+    </div>`).join('');
+}
+function setR(prefix, k, v) {
+  const st = prefix==='a' ? rapidAdd : rapidV[prefix==='v24'?'24h':'48h'];
+  st[k] = v;
+  const bp = document.getElementById(prefix+k+'p');
+  const bf = document.getElementById(prefix+k+'f');
+  if (bp) bp.className = 'rb' + (v==='pass'?' rp':'');
+  if (bf) bf.className = 'rb' + (v==='fail'?' rf':'');
+  if (prefix==='a') document.getElementById('rc').textContent =
+    Object.values(rapidAdd).filter(x=>x).length + '/5';
+}
+
+// ══════════════════════════════════════════════════════════
+// SWIFT
+// ══════════════════════════════════════════════════════════
+function calcSw() {
+  const s = ['sw-src','sw-los','sw-gcs','sw-pf','sw-pco2']
+    .reduce((a,id)=>a+parseInt(document.getElementById(id).value),0);
+  document.getElementById('sw-live').textContent = s;
+  document.getElementById('sw-big').textContent  = s;
+  const r = document.getElementById('sw-risk');
+  r.className   = 'chip '+(s>=15?'calert':'cok');
+  r.textContent = s>=15 ? '⚠ 高風險（≥15）' : '低風險';
+}
+
+// ══════════════════════════════════════════════════════════
+// PATIENTS — SAVE
+// ══════════════════════════════════════════════════════════
+async function savePt() {
+  const name = document.getElementById('a-name').value.trim();
+  const mrn  = document.getElementById('a-mrn').value.trim();
+  const date = document.getElementById('a-date').value;
+  if (!name||!mrn||!date) { toast('請填寫姓名、病歷號碼、轉出日期'); return; }
+  const sw = id => parseInt(document.getElementById(id).value);
+  const { error } = await sb.from('patients').insert({
+    name, mrn,
+    bed:           document.getElementById('a-bed').value.trim() || null,
+    transfer_unit: document.getElementById('a-unit').value || null,
+    transfer_date: date,
+    icu_days:      parseInt(document.getElementById('a-days').value) || null,
+    swift_source: sw('sw-src'), swift_los: sw('sw-los'), swift_gcs: sw('sw-gcs'),
+    swift_pf:     sw('sw-pf'),  swift_pco2: sw('sw-pco2'),
+    rapid_r: rapidAdd.R, rapid_a: rapidAdd.A, rapid_p: rapidAdd.P,
+    rapid_i: rapidAdd.I, rapid_d: rapidAdd.D,
+    created_by: CU.id,
+  });
+  if (error) { toast('❌ 儲存失敗：'+error.message); return; }
+  toast('✅ 病人資料已儲存');
+  go('list');
+}
+function resetAdd() {
+  ['a-name','a-mrn','a-bed','a-days'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('a-unit').value = '';
+  document.getElementById('a-date').value = today();
+  ['sw-src','sw-los','sw-gcs','sw-pf','sw-pco2'].forEach(id=>
+    document.getElementById(id).selectedIndex=0);
+  Object.keys(rapidAdd).forEach(k=>rapidAdd[k]=null);
+  buildRapidUI('rapid-add',rapidAdd,'a');
+  document.getElementById('rc').textContent='0/5';
+  calcSw();
+}
+
+// ══════════════════════════════════════════════════════════
+// PATIENTS — LIST
+// ══════════════════════════════════════════════════════════
+async function loadList() {
+  const { data: pts, error } = await sb
+    .from('patients_view')
+    .select('*')
+    .eq('status','active')
+    .order('transfer_date', {ascending:false});
+  if (error) { toast('❌ 載入失敗：'+error.message); return; }
+  const c = document.getElementById('pt-list');
+  if (!pts || !pts.length) {
+    c.innerHTML='<div class="empty"><div class="ei">🏥</div><h3>尚無追蹤病人</h3><p>點擊右上角「＋ 新增」開始建立記錄</p></div>';
+    return;
+  }
+  c.innerHTML = pts.map(p=>{
+    const hasInt = parseInt(p.intervention_count||0)>0;
+    const done48 = !!p.v48_id, done24 = !!p.v24_id;
+    const dot = hasInt?'dalert':done48?'dok':'dpend';
+    const cc  = hasInt?'calert':done48?'cok':'cpend';
+    const ct  = hasInt?'需介入':done48?'已完成':'待追蹤';
+    const sc  = parseInt(p.swift_total||0)>=15?'calert':'cok';
+    const vis = done48?'追蹤完成 ✓':done24?'48hr 待訪視':'24hr 待訪視';
+    return `<div class="ptr" onclick="openPt('${p.id}')">
+      <div class="ptav">${p.name.slice(-2)}</div>
+      <div class="pti">
+        <div class="ptn">${p.name}
+          <span class="chip ${cc}" style="font-size:10px">${ct}</span>
+          <span class="chip ${sc}" style="font-size:10px">SWIFT ${p.swift_total||0}</span>
+        </div>
+        <div class="ptm">${p.mrn} · ${p.bed||'—'} · ${p.transfer_unit||'—'}</div>
+        <div class="ptm">轉出：${p.transfer_date} · ${vis}</div>
+      </div>
+      <div class="sdot ${dot}"></div>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════════════
+// PATIENTS — DETAIL OVERLAY
+// ══════════════════════════════════════════════════════════
+async function openPt(id) {
+  ovPtId = id;
+  const { data: p } = await sb.from('patients').select('*').eq('id',id).single();
+  const { data: visits } = await sb.from('visits_view').select('*')
+    .eq('patient_id',id).order('visit_type');
+  if (!p) return;
+
+  document.getElementById('ov-name').textContent = p.name;
+  document.getElementById('ov-sub').textContent =
+    p.mrn+' · '+(p.bed||'—')+' · 轉出 '+p.transfer_date;
+
+  const v24 = visits?.find(v=>v.visit_type==='24h');
+  const v48 = visits?.find(v=>v.visit_type==='48h');
+  const allR = ['r','a','p','i','d'].every(k=>p['rapid_'+k]);
+  document.getElementById('vtl-pre').className = 'vtlitem '+(allR?'done':'pending');
+  document.getElementById('vtl-24').className  = 'vtlitem '+(v24?'done':'pending');
+  document.getElementById('vtl-48').className  = 'vtlitem '+(v48?'done':'');
+
+  const rl = {r:'呼吸頻率',a:'呼吸道保護',p:'脫管穩定',i:'氧氣需求',d:'分泌物'};
+  const rrows = ['r','a','p','i','d'].map(k=>{
+    const v=p['rapid_'+k];
+    return `<div class="ir"><span class="k">${rl[k]}</span>
+      <span class="chip ${v==='pass'?'cok':v==='fail'?'calert':'cgray'}" style="font-size:10px">
+        ${v==='pass'?'✓ 通過':v==='fail'?'✗ 未達標':'未填'}</span></div>`;
+  }).join('<div class="dv"></div>');
+
+  document.getElementById('ov-basic').innerHTML=`
+    <div class="ir"><span class="k">病歷號碼</span><span class="v">${p.mrn}</span></div><div class="dv"></div>
+    <div class="ir"><span class="k">床號</span><span class="v">${p.bed||'—'}</span></div><div class="dv"></div>
+    <div class="ir"><span class="k">轉出單位</span><span class="v">${p.transfer_unit||'—'}</span></div><div class="dv"></div>
+    <div class="ir"><span class="k">ICU 住院天數</span><span class="v">${p.icu_days||'—'} 天</span></div><div class="dv"></div>
+    <div class="ir"><span class="k">SWIFT Score</span><span class="v">${p.swift_total} 分
+      <span class="chip ${parseInt(p.swift_total)>=15?'calert':'cok'}" style="font-size:10px">
+        ${parseInt(p.swift_total)>=15?'高風險':'低風險'}</span></span></div>
+    <div class="dv"></div>
+    <div style="font-size:11px;font-weight:700;color:var(--g4);margin:8px 0 4px;letter-spacing:.06em">RAPID-ICU</div>
+    ${rrows}`;
+
+  document.getElementById('ov-v24').innerHTML = renderVisit('24h',v24,true);
+  document.getElementById('ov-v48').innerHTML = renderVisit('48h',v48,!!v24);
+  document.getElementById('ov-del').innerHTML = CU.role==='admin'
+    ? `<button class="bdanger" style="width:100%" onclick="delPt('${id}')">🗑 刪除此病人記錄</button>`:'' ;
+
+  document.getElementById('ov-pt').classList.add('open');
+  document.body.style.overflow='hidden';
+  rapidV['24h']={R:null,A:null,P:null,I:null,D:null};
+  rapidV['48h']={R:null,A:null,P:null,I:null,D:null};
+}
+
+function renderVisit(type, visit, prevDone) {
+  if (visit) {
+    const il={int_pt:'胸腔物理治療',int_neb:'噴霧治療',int_suction:'抽痰',
+              int_o2:'氧氣調整',int_consult:'胸腔科會診'};
+    const ints=Object.keys(il).filter(k=>visit[k]).map(k=>il[k]).join('、');
+    const rr=['r','a','p','i','d'].map(k=>{
+      const v=visit['rapid_'+k]; if(!v) return '';
+      return `<span class="chip ${v==='pass'?'cok':'calert'}" style="font-size:10px">${k.toUpperCase()}${v==='pass'?'✓':'✗'}</span>`;
+    }).join(' ');
+    return `<div class="cb" style="padding:12px 16px">
+      <div class="ir"><span class="k">訪視時間</span><span class="v">${visit.visited_time||'—'}</span></div><div class="dv"></div>
+      <div class="ir"><span class="k">訪視者</span><span class="v">${visit.rt_name||'—'}</span></div>
+      ${rr?`<div class="dv"></div><div class="ir"><span class="k">RAPID</span><div style="display:flex;gap:4px;flex-wrap:wrap">${rr}</div></div>`:''}
+      ${ints?`<div class="dv"></div><div class="ir"><span class="k">介入措施</span><span class="v">${ints}</span></div>`:''}
+      ${visit.notes?`<div class="dv"></div><div style="font-size:12px;color:var(--g4);margin-top:6px">備註</div><div style="font-size:13px;margin-top:4px">${visit.notes}</div>`:''}
+    </div>`;
+  }
+  if (!prevDone) return `<div class="cb" style="font-size:13px;color:var(--g4);padding:14px 16px">請先完成 24hr 訪視</div>`;
+  const prefix = type==='24h'?'v24':'v48';
+  const rapid_html = RAPID_DEF.map(d=>`
+    <div class="ri">
+      <div class="rl" style="background:${d.bg};color:${d.cl}">${d.k}</div>
+      <div class="rtxt"><strong>${d.l}</strong><span>${d.s}</span></div>
+      <div class="rbtns">
+        <button class="rb" id="${prefix}${d.k}p" onclick="setR('${prefix}','${d.k}','pass')">✓</button>
+        <button class="rb" id="${prefix}${d.k}f" onclick="setR('${prefix}','${d.k}','fail')">✗</button>
+      </div>
+    </div>`).join('');
+  const int_html = INT_DEF.map(i=>
+    `<button class="ibt" id="ib-${type}-${i.k}" onclick="this.classList.toggle('on')">${i.l}</button>`
+  ).join('');
+  const now=new Date().toLocaleString('zh-TW',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+  return `<div>
+    <div style="padding:12px 16px;border-bottom:1px solid var(--g2)">
+      <label class="fl">訪視時間</label>
+      <input type="text" id="vt-${type}" value="${now}">
+    </div>
+    <div style="font-size:11px;font-weight:700;color:var(--g4);padding:10px 16px 2px;letter-spacing:.06em">RAPID 追蹤評估</div>
+    ${rapid_html}
+    <div style="padding:12px 16px">
+      <div style="font-size:11px;font-weight:700;color:var(--g4);margin-bottom:8px;letter-spacing:.06em">介入措施（可複選）</div>
+      <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px">${int_html}</div>
+      <div class="fr"><label class="fl">備註</label><textarea id="vn-${type}" rows="3" placeholder="異常狀況、通知記錄…"></textarea></div>
+      <button class="bp" onclick="saveVisit('${type}')">💾 儲存 ${type} 訪視記錄</button>
+    </div>
+  </div>`;
+}
+
+async function saveVisit(type) {
+  const rs = type==='24h'?rapidV['24h']:rapidV['48h'];
+  if (type==='48h') {
+    const { data } = await sb.from('visits').select('id')
+      .eq('patient_id',ovPtId).eq('visit_type','24h').single();
+    if (!data) { toast('請先完成 24hr 訪視'); return; }
+  }
+  const intVals={};
+  INT_DEF.forEach(i=>{
+    const el=document.getElementById('ib-'+type+'-'+i.k);
+    intVals[i.k]=el?.classList.contains('on')||false;
+  });
+  const { error } = await sb.from('visits').upsert({
+    patient_id:   ovPtId,
+    visit_type:   type,
+    rapid_r:rs.R, rapid_a:rs.A, rapid_p:rs.P, rapid_i:rs.I, rapid_d:rs.D,
+    ...intVals,
+    notes:        document.getElementById('vn-'+type)?.value||null,
+    visited_time: document.getElementById('vt-'+type)?.value||null,
+    visited_by:   CU.id,
+  }, { onConflict: 'patient_id,visit_type' });
+  if (error) { toast('❌ 儲存失敗：'+error.message); return; }
+  toast('✅ '+type+' 訪視已儲存');
+  rapidV[type]={R:null,A:null,P:null,I:null,D:null};
+  openPt(ovPtId); loadList();
+}
+
+async function delPt(id) {
+  if (!confirm('確認刪除此病人記錄？')) return;
+  await sb.from('patients').update({status:'deleted'}).eq('id',id);
+  closeOv(); toast('記錄已刪除'); loadList();
+}
+function closeOv() {
+  document.getElementById('ov-pt').classList.remove('open');
+  document.body.style.overflow='';
+}
+
+// ══════════════════════════════════════════════════════════
+// DASHBOARD
+// ══════════════════════════════════════════════════════════
+async function loadDash() {
+  const { data: pts } = await sb.from('patients_view').select('*').eq('status','active');
+  if (!pts) return;
+  const n = pts.length;
+  document.getElementById('d-total').textContent = n;
+  document.getElementById('d-swift').textContent = pts.filter(p=>parseInt(p.swift_total||0)>=15).length;
+  const d24 = pts.filter(p=>p.v24_id).length;
+  const d48 = pts.filter(p=>p.v48_id).length;
+  document.getElementById('d-24h').textContent = n ? Math.round(d24/n*100)+'%':'—';
+  document.getElementById('d-48h').textContent = n ? Math.round(d48/n*100)+'%':'—';
+
+  const { data: vis } = await sb.from('visits').select('*');
+  const ic={int_pt:0,int_neb:0,int_suction:0,int_o2:0,int_consult:0};
+  (vis||[]).forEach(v=>Object.keys(ic).forEach(k=>{ if(v[k]) ic[k]++; }));
+  document.getElementById('di-pt').textContent   = ic.int_pt;
+  document.getElementById('di-neb').textContent  = ic.int_neb;
+  document.getElementById('di-suct').textContent = ic.int_suction;
+  document.getElementById('di-o2').textContent   = ic.int_o2;
+  document.getElementById('di-con').textContent  = ic.int_consult;
+
+  ['R','A','P','I','D'].forEach(k=>{
+    const key='rapid_'+k.toLowerCase();
+    const total=pts.filter(p=>p[key]).length;
+    const pass=pts.filter(p=>p[key]==='pass').length;
+    document.getElementById('dr-'+k).textContent =
+      total ? pass+'/'+total+' ('+Math.round(pass/total*100)+'%)':'—';
+  });
+}
+
+// ══════════════════════════════════════════════════════════
+// EXPORT CSV
+// ══════════════════════════════════════════════════════════
+function initExport() {
+  const t=new Date().toISOString().split('T')[0];
+  document.getElementById('ex-from').value=t.slice(0,7)+'-01';
+  document.getElementById('ex-to').value=t;
+  updateExCount();
+  ['ex-unit','ex-from','ex-to','ex-status'].forEach(id=>
+    document.getElementById(id).onchange=updateExCount);
+}
+async function getExportData() {
+  let q = sb.from('export_view').select('*').eq('status','active');
+  const unit=document.getElementById('ex-unit').value;
+  const from=document.getElementById('ex-from').value;
+  const to=document.getElementById('ex-to').value;
+  const status=document.getElementById('ex-status').value;
+  if (unit) q=q.eq('transfer_unit',unit);
+  if (from) q=q.gte('transfer_date',from);
+  if (to)   q=q.lte('transfer_date',to);
+  const { data } = await q.order('transfer_date',{ascending:false});
+  let rows = data||[];
+  if (status==='done')    rows=rows.filter(p=>p.v48_id);
+  if (status==='pending') rows=rows.filter(p=>!p.v24_id);
+  if (status==='alert')   rows=rows.filter(p=>parseInt(p.intervention_count||0)>0);
+  return rows;
+}
+async function updateExCount() {
+  const rows=await getExportData();
+  document.getElementById('ex-count').textContent=rows.length;
+}
+async function exportCSV() {
+  const rows=await getExportData();
+  if (!rows.length) { toast('沒有符合條件的資料'); return; }
+  const rL=v=>v==='pass'?'通過':v==='fail'?'未達標':'未填';
+  const iL=(row,p)=>{
+    const m={[p+'_pt']:'胸腔物理治療',[p+'_neb']:'噴霧治療',
+             [p+'_suction']:'抽痰',[p+'_o2']:'氧氣調整',[p+'_consult']:'胸腔科會診'};
+    return Object.keys(m).filter(k=>row[k]).map(k=>m[k]).join('；');
+  };
+  const headers=['病歷號碼','病人姓名','床號','轉出單位','轉出日期','ICU住院天數',
+    'SWIFT總分','SWIFT風險',
+    'RAPID-R','RAPID-A','RAPID-P','RAPID-I','RAPID-D',
+    '24hr訪視時間','24hr訪視者','24hr介入','24hr備註',
+    '48hr訪視時間','48hr訪視者','48hr介入','48hr備註',
+    '建立者','建立時間'];
+  const data=rows.map(p=>[
+    p.mrn,p.name,p.bed||'',p.transfer_unit||'',p.transfer_date,p.icu_days||'',
+    p.swift_total,parseInt(p.swift_total||0)>=15?'高風險':'低風險',
+    rL(p.rapid_r),rL(p.rapid_a),rL(p.rapid_p),rL(p.rapid_i),rL(p.rapid_d),
+    p.v24_time||'',p.v24_by||'',iL(p,'v24'),p.v24_note||'',
+    p.v48_time||'',p.v48_by||'',iL(p,'v48'),p.v48_note||'',
+    p.created_by_name||'',p.created_at?new Date(p.created_at).toLocaleString('zh-TW'):'',
+  ]);
+  const bom='\uFEFF';
+  const csv=bom+[headers,...data].map(row=>
+    row.map(c=>{const s=String(c??'').replace(/"/g,'""');
+      return /[,\n"\u4e00-\u9fff]/.test(s)?`"${s}"`:s;}).join(',')
+  ).join('\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download=`ICU追蹤_${document.getElementById('ex-from').value}_${document.getElementById('ex-to').value}.csv`;
+  document.body.appendChild(a);a.click();
+  document.body.removeChild(a);URL.revokeObjectURL(url);
+  toast('✅ 已匯出 '+rows.length+' 筆記錄');
+}
+
+// ══════════════════════════════════════════════════════════
+// USER MANAGEMENT (admin)
+// ══════════════════════════════════════════════════════════
+async function loadUsers() {
+  const { data: users } = await sb.from('profiles')
+    .select('*').order('created_at',{ascending:false});
+  const rbc={admin:'var(--purple2)',rt:'var(--navy3)',nurse:'var(--teal2)'};
+  const rcc={admin:'var(--purple)',rt:'var(--navy)',nurse:'var(--teal)'};
+  document.getElementById('u-list').innerHTML=(users||[]).map(u=>`
+    <div class="ur">
+      <div class="uav" style="background:${rbc[u.role]||'var(--g2)'};color:${rcc[u.role]||'var(--g6)'}">
+        ${u.name.slice(-1)}</div>
+      <div style="flex:1">
+        <div class="un">${u.name}
+          <span class="chip cnavy" style="font-size:10px">${roleL(u.role)}</span>
+          ${u.is_active===false?'<span class="chip cgray" style="font-size:10px">已停用</span>':''}
+        </div>
+        <div class="um">${u.eid} · ${u.dept||'—'}</div>
+      </div>
+      ${u.id!==CU.id
+        ? `<button class="${u.is_active!==false?'bwarn':'bsm'}"
+             onclick="toggleUser('${u.id}',${u.is_active===false})">
+             ${u.is_active!==false?'停用':'啟用'}</button>`
+        : '<span style="font-size:11px;color:var(--g4)">自己</span>'}
+    </div>`).join('');
+}
+
+async function addUser() {
+  const eid  = document.getElementById('u-eid').value.trim().toUpperCase();
+  const name = document.getElementById('u-name').value.trim();
+  const pw   = document.getElementById('u-pw').value;
+  const role = document.getElementById('u-role').value;
+  const dept = document.getElementById('u-dept').value.trim();
+  if (!eid||!name||!pw) { toast('請填寫必填欄位'); return; }
+  if (pw.length<8)       { toast('密碼至少 8 個字元'); return; }
+  const email = eid+'@ms.skh.org.tw';
+  // 用 Supabase Admin API 建立帳號（需 service_role key，這裡用 signUp 暫代）
+  const { data, error } = await sb.auth.signUp({ email, password: pw });
+  if (error) { toast('❌ '+error.message); return; }
+  // 寫入 profile
+  await sb.from('profiles').insert({
+    id: data.user.id, eid, name, role, dept: dept||null, is_active: true
+  });
+  toast('✅ 帳號已建立：'+eid);
+  ['u-eid','u-name','u-pw','u-dept'].forEach(id=>document.getElementById(id).value='');
+  loadUsers();
+}
+
+async function toggleUser(id, toActive) {
+  await sb.from('profiles').update({is_active:toActive}).eq('id',id);
+  toast(toActive?'帳號已啟用':'帳號已停用');
+  loadUsers();
+}
+
+// ══════════════════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════════════════
+function toast(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2600);
+}
+
+init();
+</script>
+</body>
+</html>
