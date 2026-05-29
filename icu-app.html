@@ -1076,24 +1076,43 @@ async function updateExCount() {
 async function exportCSV() {
   const rows=await getExportData();
   if (!rows.length) { toast('沒有符合條件的資料'); return; }
-  const rL=(v,k)=>{ if(v===null||v===undefined||v==='') return '未填'; const item=RT_ITEMS.find(d=>d.k===k); return item?`${v}分-${item.opts[v]}`:`${v}分`; };
+  const rapidL=v=>v==='pass'?'通過':v==='fail'?'未達標':'未填';
+  const rtL=(v,k)=>{ if(v===null||v===undefined||v==='') return '未填'; const item=RT_ITEMS.find(d=>d.k===k); return item?`${v}分－${item.opts[Number(v)]}`:`${v}分`; };
+  const rtTotal2=(ph,bs,rr,cg,ox)=>{
+    const vals=[ph,bs,rr,cg,ox];
+    if(vals.some(v=>v===null||v===undefined||v==='')) return '—';
+    const t=vals.reduce((a,b)=>a+Number(b),0);
+    const risk=t<=5?'低風險':t<=10?'中風險':t<=15?'高風險':'極高風險';
+    return t+'分（'+risk+'）';
+  };
   const iL=(row,p)=>{
     const m={[p+'_pt']:'胸腔物理治療',[p+'_neb']:'噴霧治療',
              [p+'_suction']:'抽痰',[p+'_o2']:'氧氣調整',[p+'_consult']:'胸腔科會診'};
     return Object.keys(m).filter(k=>row[k]).map(k=>m[k]).join('；');
   };
-  const headers=['病歷號碼','病人姓名','床號','轉出單位','轉出日期','ICU住院天數',
+  const headers=[
+    '病歷號碼','病人姓名','轉入床號','轉出單位','轉出日期','ICU住院天數',
     'SWIFT總分','SWIFT風險',
-    'RAPID-R','RAPID-A','RAPID-P','RAPID-I','RAPID-D',
-    '24hr訪視時間','24hr訪視者','24hr介入','24hr備註',
-    '48hr訪視時間','48hr訪視者','48hr介入','48hr備註',
+    'RAPID-R呼吸頻率','RAPID-A呼吸道保護','RAPID-P脫管穩定','RAPID-I氧氣需求','RAPID-D分泌物',
+    '24hr訪視時間','24hr訪視者',
+    '24hr-肺部疾病史','24hr-呼吸音','24hr-呼吸次數','24hr-咳嗽能力','24hr-氧氣需求','24hr-RT總分',
+    '24hr介入措施','24hr備註',
+    '48hr訪視時間','48hr訪視者',
+    '48hr-肺部疾病史','48hr-呼吸音','48hr-呼吸次數','48hr-咳嗽能力','48hr-氧氣需求','48hr-RT總分',
+    '48hr介入措施','48hr備註',
     '建立者','建立時間'];
   const data=rows.map(p=>[
     p.mrn,p.name,p.bed||'',p.transfer_unit||'',p.transfer_date,p.icu_days||'',
     p.swift_total,parseInt(p.swift_total||0)>=15?'高風險':'低風險',
-    rL(p.rapid_r,'ph'),rL(p.rapid_a,'bs'),rL(p.rapid_p,'rr'),rL(p.rapid_i,'cg'),rL(p.rapid_d,'ox'),
-    p.v24_time||'',p.v24_by||'',iL(p,'v24'),p.v24_note||'',
-    p.v48_time||'',p.v48_by||'',iL(p,'v48'),p.v48_note||'',
+    rapidL(p.rapid_r),rapidL(p.rapid_a),rapidL(p.rapid_p),rapidL(p.rapid_i),rapidL(p.rapid_d),
+    p.v24_time||'',p.v24_by||'',
+    rtL(p.v24_ph,'ph'),rtL(p.v24_bs,'bs'),rtL(p.v24_rr,'rr'),rtL(p.v24_cg,'cg'),rtL(p.v24_ox,'ox'),
+    rtTotal2(p.v24_ph,p.v24_bs,p.v24_rr,p.v24_cg,p.v24_ox),
+    iL(p,'v24'),p.v24_note||'',
+    p.v48_time||'',p.v48_by||'',
+    rtL(p.v48_ph,'ph'),rtL(p.v48_bs,'bs'),rtL(p.v48_rr,'rr'),rtL(p.v48_cg,'cg'),rtL(p.v48_ox,'ox'),
+    rtTotal2(p.v48_ph,p.v48_bs,p.v48_rr,p.v48_cg,p.v48_ox),
+    iL(p,'v48'),p.v48_note||'',
     p.created_by_name||'',p.created_at?new Date(p.created_at).toLocaleString('zh-TW'):'',
   ]);
   const bom='\uFEFF';
