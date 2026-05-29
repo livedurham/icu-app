@@ -34,24 +34,24 @@ body{font-family:'DM Sans','Noto Sans TC',sans-serif;background:var(--g1);color:
 }
 .login-logo{text-align:center;margin-bottom:36px}
 .login-logo .icon{display:block;margin-bottom:12px;}
-.login-logo h1{font-size:24px;font-weight:700;color:white;letter-spacing:-.01em}
-.login-logo p{font-size:13px;color:rgba(255,255,255,.55);margin-top:5px}
+.login-logo h1{font-size:30px;font-weight:700;color:white;letter-spacing:-.01em}
+.login-logo p{font-size:21px;color:rgba(255,255,255,.55);margin-top:5px}
 .login-box{background:white;border-radius:20px;padding:28px 22px;width:100%;max-width:380px;box-shadow:0 24px 64px rgba(0,0,0,.3)}
 .lf{margin-bottom:16px}
-.lf label{display:block;font-size:11px;font-weight:700;color:var(--g4);margin-bottom:6px;letter-spacing:.08em;text-transform:uppercase}
-.lf input{width:100%;padding:13px 14px;border:1.5px solid var(--g2);border-radius:var(--rs);font-size:15px;font-family:inherit;background:var(--g1);color:var(--g8);outline:none;transition:border .15s,background .15s;-webkit-appearance:none}
+.lf label{display:block;font-size:21px;font-weight:700;color:var(--g4);margin-bottom:6px;letter-spacing:.08em;text-transform:uppercase}
+.lf input{width:100%;padding:13px 14px;border:1.5px solid var(--g2);border-radius:var(--rs);font-size:21px;font-family:inherit;background:var(--g1);color:var(--g8);outline:none;transition:border .15s,background .15s;-webkit-appearance:none}
 .lf input:focus{border-color:var(--navy2);background:white}
-.btn-login{width:100%;padding:14px;border-radius:var(--rs);background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);color:white;border:none;font-size:16px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:6px;letter-spacing:.01em}
-.login-err{background:var(--red2);color:var(--red);font-size:13px;padding:10px 14px;border-radius:var(--rs);margin-top:12px;text-align:center;display:none}
-.login-hint{font-size:11px;color:var(--g4);text-align:center;margin-top:14px}
+.btn-login{width:100%;padding:14px;border-radius:var(--rs);background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);color:white;border:none;font-size:20px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:6px;letter-spacing:.01em}
+.login-err{background:var(--red2);color:var(--red);font-size:21px;padding:10px 14px;border-radius:var(--rs);margin-top:12px;text-align:center;display:none}
+.login-hint{font-size:21px;color:var(--g4);text-align:center;margin-top:14px}
 
 /* ── APP SHELL ── */
 #app{display:flex;flex-direction:column;height:100%;display:none}
 .topbar{background:var(--navy);padding:env(safe-area-inset-top) 0 0;flex-shrink:0}
 .topbar-inner{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 12px}
-.topbar h1{font-size:16px;font-weight:700;color:white;letter-spacing:.01em}
-.topbar small{font-size:11px;color:rgba(255,255,255,.5);display:block;margin-top:1px}
-.nb{background:rgba(255,255,255,.14);border:none;color:white;border-radius:8px;padding:7px 13px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer}
+.topbar h1{font-size:20px;font-weight:700;color:white;letter-spacing:.01em}
+.topbar small{font-size:21px;color:rgba(255,255,255,.5);display:block;margin-top:1px}
+.nb{background:rgba(255,255,255,.14);border:none;color:white;border-radius:8px;padding:7px 13px;font-size:21px;font-weight:600;font-family:inherit;cursor:pointer}
 
 .pages{flex:1;overflow:hidden;position:relative}
 .page{position:absolute;inset:0;overflow-y:auto;padding:14px 14px 90px;display:none}
@@ -59,33 +59,33 @@ body{font-family:'DM Sans','Noto Sans TC',sans-serif;background:var(--g1);color:
 
 /* ── BOTTOM NAV ── */
 .bottomnav{background:white;border-top:1px solid var(--g2);display:flex;padding:6px 0;padding-bottom:max(6px,env(safe-area-inset-bottom));flex-shrink:0;box-shadow:0 -2px 16px rgba(0,0,0,.07)}
-.bntab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;border:none;background:none;cursor:pointer;padding:5px 0;font-size:10px;color:var(--g4);font-family:inherit;transition:color .15s}
+.bntab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;border:none;background:none;cursor:pointer;padding:5px 0;font-size:20px;color:var(--g4);font-family:inherit;transition:color .15s}
 .bntab.on{color:var(--navy)}
 .bntab svg{display:block;margin:0 auto 2px}
 
 /* ── CARDS ── */
 .card{background:white;border-radius:var(--r);box-shadow:var(--sh);margin-bottom:10px;overflow:hidden}
 .ch{padding:13px 16px 11px;border-bottom:1px solid var(--g2);display:flex;align-items:center;justify-content:space-between}
-.ct{font-size:14px;font-weight:700;color:var(--g8)}
+.ct{font-size:20px;font-weight:700;color:var(--g8)}
 .cb{padding:14px 16px}
 
 /* ── FORMS ── */
-.fl{display:block;font-size:11px;font-weight:700;color:var(--g4);margin-bottom:5px;letter-spacing:.07em;text-transform:uppercase}
-input[type=text],input[type=date],input[type=password],select,textarea{width:100%;padding:11px 13px;border:1.5px solid var(--g2);border-radius:var(--rs);font-size:15px;font-family:inherit;background:var(--g1);color:var(--g8);outline:none;transition:border .15s;-webkit-appearance:none;appearance:none}
+.fl{display:block;font-size:21px;font-weight:700;color:var(--g4);margin-bottom:5px;letter-spacing:.07em;text-transform:uppercase}
+input[type=text],input[type=date],input[type=password],select,textarea{width:100%;padding:11px 13px;border:1.5px solid var(--g2);border-radius:var(--rs);font-size:21px;font-family:inherit;background:var(--g1);color:var(--g8);outline:none;transition:border .15s;-webkit-appearance:none;appearance:none}
 input:focus,select:focus,textarea:focus{border-color:var(--navy2);background:white}
 textarea{resize:none}
 .fr{margin-bottom:13px}
 .g2c{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 
 /* ── BUTTONS ── */
-.bp{width:100%;padding:14px;border-radius:var(--r);background:var(--navy);color:white;border:none;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:.01em}
+.bp{width:100%;padding:14px;border-radius:var(--r);background:var(--navy);color:white;border:none;font-size:21px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:.01em}
 .bp:active{opacity:.85}
-.bsm{padding:7px 15px;border-radius:var(--rs);background:var(--navy);color:white;border:none;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer}
-.bdanger{padding:7px 15px;border-radius:var(--rs);background:var(--red2);color:var(--red);border:1px solid #FCA5A5;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer}
-.bwarn{padding:7px 15px;border-radius:var(--rs);background:var(--amber2);color:var(--amber);border:1px solid #FCD34D;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer}
+.bsm{padding:7px 15px;border-radius:var(--rs);background:var(--navy);color:white;border:none;font-size:21px;font-weight:600;font-family:inherit;cursor:pointer}
+.bdanger{padding:7px 15px;border-radius:var(--rs);background:var(--red2);color:var(--red);border:1px solid #FCA5A5;font-size:21px;font-weight:600;font-family:inherit;cursor:pointer}
+.bwarn{padding:7px 15px;border-radius:var(--rs);background:var(--amber2);color:var(--amber);border:1px solid #FCD34D;font-size:21px;font-weight:600;font-family:inherit;cursor:pointer}
 
 /* ── CHIPS ── */
-.chip{display:inline-block;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;white-space:nowrap}
+.chip{display:inline-block;font-size:21px;font-weight:600;padding:3px 9px;border-radius:20px;white-space:nowrap}
 .cok{background:var(--green2);color:var(--green)}
 .calert{background:var(--red2);color:var(--red)}
 .cpend{background:var(--amber2);color:var(--amber)}
@@ -96,94 +96,94 @@ textarea{resize:none}
 /* ── RAPID ── */
 .ri{display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid var(--g2)}
 .ri:last-child{border-bottom:none}
-.rl{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;flex-shrink:0}
+.rl{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:21px;font-weight:800;flex-shrink:0}
 .rtxt{flex:1;min-width:0}
-.rtxt strong{font-size:13px;display:block;font-weight:600}
-.rtxt span{font-size:11px;color:var(--g4)}
+.rtxt strong{font-size:21px;display:block;font-weight:600}
+.rtxt span{font-size:21px;color:var(--g4)}
 .rbtns{display:flex;gap:5px}
-.rb{width:36px;height:36px;border-radius:8px;border:1.5px solid var(--g2);background:var(--g1);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+.rb{width:36px;height:36px;border-radius:8px;border:1.5px solid var(--g2);background:var(--g1);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
 .rb.rp{background:var(--green2);border-color:#86EFAC}
 .rb.rf{background:var(--red2);border-color:#FCA5A5}
 
 /* ── SWIFT ── */
 .swr{display:flex;align-items:center;padding:10px 0;border-bottom:1px solid var(--g2)}
 .swr:last-child{border-bottom:none}
-.swl{flex:1;font-size:13px}
-.swl small{display:block;font-size:11px;color:var(--g4)}
-.swsel{width:136px;flex-shrink:0;padding:8px 10px;border:1.5px solid var(--g2);border-radius:var(--rs);font-size:12px;font-family:inherit;background:var(--g1);-webkit-appearance:none;appearance:none;color:var(--g8);outline:none}
+.swl{flex:1;font-size:21px}
+.swl small{display:block;font-size:21px;color:var(--g4)}
+.swsel{width:136px;flex-shrink:0;padding:8px 10px;border:1.5px solid var(--g2);border-radius:var(--rs);font-size:20px;font-family:inherit;background:var(--g1);-webkit-appearance:none;appearance:none;color:var(--g8);outline:none}
 .swsel:focus{border-color:var(--navy2);background:white}
 .swift-box{background:var(--navy);color:white;border-radius:var(--rs);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;margin-top:8px}
-.swift-box .big{font-size:38px;font-weight:800;line-height:1}
+.swift-box .big{font-size:42px;font-weight:800;line-height:1}
 
 /* ── PT LIST ── */
 .ptr{padding:13px 16px;border-bottom:1px solid var(--g2);display:flex;align-items:center;gap:12px;cursor:pointer;transition:background .1s}
 .ptr:last-child{border-bottom:none}
 .ptr:active{background:var(--g1)}
-.ptav{width:42px;height:42px;border-radius:50%;background:var(--navy);color:white;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex-shrink:0}
+.ptav{width:42px;height:42px;border-radius:50%;background:var(--navy);color:white;display:flex;align-items:center;justify-content:center;font-size:21px;font-weight:700;flex-shrink:0}
 .pti{flex:1;min-width:0}
-.ptn{font-size:14px;font-weight:700;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.ptm{font-size:11px;color:var(--g4);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ptn{font-size:20px;font-weight:700;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.ptm{font-size:21px;color:var(--g4);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sdot{width:9px;height:9px;border-radius:50%;flex-shrink:0;margin-top:2px}
 .dok{background:var(--green)}
 .dpend{background:var(--amber)}
 .dalert{background:var(--red)}
 
 /* ── INT BUTTONS ── */
-.ibt{padding:9px 12px;border-radius:var(--rs);border:1.5px solid var(--g2);background:var(--g1);font-size:12px;font-family:inherit;cursor:pointer;color:var(--g6);transition:all .15s;white-space:nowrap}
+.ibt{padding:9px 12px;border-radius:var(--rs);border:1.5px solid var(--g2);background:var(--g1);font-size:20px;font-family:inherit;cursor:pointer;color:var(--g6);transition:all .15s;white-space:nowrap}
 .ibt.on{background:var(--navy3);border-color:var(--navy2);color:var(--navy);font-weight:600}
 
 /* ── INFO ROWS ── */
 .ir{display:flex;justify-content:space-between;align-items:center;padding:7px 0}
-.ir .k{font-size:12px;color:var(--g4)}
-.ir .v{font-size:13px;font-weight:600;text-align:right;max-width:60%}
+.ir .k{font-size:20px;color:var(--g4)}
+.ir .v{font-size:21px;font-weight:600;text-align:right;max-width:60%}
 .dv{height:1px;background:var(--g2);margin:1px 0}
-.stitle{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--g4);margin:18px 0 8px}
+.stitle{font-size:21px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--g4);margin:18px 0 8px}
 .stitle:first-child{margin-top:0}
 
 /* ── STATS ── */
 .sgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
 .scard{background:white;border-radius:var(--r);padding:14px 16px;box-shadow:var(--sh)}
-.snum{font-size:28px;font-weight:800;line-height:1.1}
-.slbl{font-size:11px;color:var(--g4);margin-top:3px}
+.snum{font-size:30px;font-weight:800;line-height:1.1}
+.slbl{font-size:21px;color:var(--g4);margin-top:3px}
 
 /* ── OVERLAY ── */
 .ov{display:none;position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.5);overflow-y:auto;padding-top:32px}
 .ov.open{display:block}
 .ovcard{background:white;border-radius:22px 22px 0 0;min-height:calc(100vh - 32px);padding:20px 16px 100px}
 .ovhandle{width:38px;height:4px;background:var(--g2);border-radius:2px;margin:0 auto 20px}
-.ovtitle{font-size:19px;font-weight:800;letter-spacing:-.01em}
-.ovsub{font-size:12px;color:var(--g4);margin-top:3px;margin-bottom:20px}
+.ovtitle{font-size:21px;font-weight:800;letter-spacing:-.01em}
+.ovsub{font-size:20px;color:var(--g4);margin-top:3px;margin-bottom:20px}
 
 /* ── USER LIST ── */
 .ur{padding:12px 16px;border-bottom:1px solid var(--g2);display:flex;align-items:center;gap:10px}
 .ur:last-child{border-bottom:none}
-.uav{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
-.un{font-size:13px;font-weight:600}
-.um{font-size:11px;color:var(--g4);margin-top:1px}
+.uav{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:21px;font-weight:700;flex-shrink:0}
+.un{font-size:21px;font-weight:600}
+.um{font-size:21px;color:var(--g4);margin-top:1px}
 
 /* ── EMPTY ── */
 .empty{text-align:center;padding:52px 20px;color:var(--g4)}
 .empty .ei{font-size:48px;margin-bottom:12px}
-.empty h3{font-size:16px;font-weight:700;color:var(--g6);margin-bottom:6px}
-.empty p{font-size:13px}
+.empty h3{font-size:20px;font-weight:700;color:var(--g6);margin-bottom:6px}
+.empty p{font-size:21px}
 
 /* ── TOAST ── */
-.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:rgba(15,30,50,.92);color:white;padding:10px 20px;border-radius:22px;font-size:13px;z-index:999;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap;backdrop-filter:blur(8px)}
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:rgba(15,30,50,.92);color:white;padding:10px 20px;border-radius:22px;font-size:21px;z-index:999;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap;backdrop-filter:blur(8px)}
 .toast.show{opacity:1}
 
 /* ── VISIT STATUS TIMELINE ── */
 .vtl{display:flex;gap:0;margin:0 16px 14px;border-radius:var(--rs);overflow:hidden;border:1px solid var(--g2)}
-.vtlitem{flex:1;padding:10px 8px;text-align:center;font-size:12px;font-weight:600;background:var(--g1);color:var(--g4);transition:all .2s}
+.vtlitem{flex:1;padding:10px 8px;text-align:center;font-size:20px;font-weight:600;background:var(--g1);color:var(--g4);transition:all .2s}
 .vtlitem.done{background:var(--green2);color:var(--green)}
 .vtlitem.pending{background:var(--amber2);color:var(--amber)}
 .vtlitem:not(:last-child){border-right:1px solid var(--g2)}
-.vtlitem .vt-icon{display:block;font-size:18px;margin-bottom:2px}
+.vtlitem .vt-icon{display:block;font-size:20px;margin-bottom:2px}
 
 /* ── MODAL (Admin password reset) ── */
 .modal{display:none;position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.5);align-items:center;justify-content:center;padding:20px}
 .modal.open{display:flex}
 .mbox{background:white;border-radius:var(--r);padding:22px 20px;width:100%;max-width:340px}
-.mtitle{font-size:16px;font-weight:700;margin-bottom:16px}
+.mtitle{font-size:20px;font-weight:700;margin-bottom:16px}
 </style>
 </head>
 <body>
@@ -201,6 +201,10 @@ textarea{resize:none}
     <button class="btn-login" onclick="login()">登　入</button>
     <div class="login-err" id="l-err"></div>
     <div class="login-hint">忘記密碼請聯絡管理員</div>
+  </div>
+  <div style="margin-top:20px;text-align:center;color:rgba(255,255,255,.35);font-size:21px;line-height:1.9">
+    <div>Developer　林鎮均</div>
+    <div>Version 1.0　2026-05-29</div>
   </div>
 </div>
 
@@ -264,8 +268,8 @@ textarea{resize:none}
         <div class="ch">
           <span class="ct">SWIFT Score</span>
           <div style="display:flex;align-items:baseline;gap:3px">
-            <span id="sw-live" style="font-size:22px;font-weight:800;color:var(--navy)">0</span>
-            <span style="font-size:11px;color:var(--g4)">/64分</span>
+            <span id="sw-live" style="font-size:30px;font-weight:800;color:var(--navy)">0</span>
+            <span style="font-size:21px;color:var(--g4)">/64分</span>
           </div>
         </div>
         <div style="padding:0 16px 10px">
@@ -280,7 +284,7 @@ textarea{resize:none}
           <div class="swr"><div class="swl">PaCO₂</div>
             <select class="swsel" id="sw-pco2" onchange="calcSw()"><option value="0">&lt;45mmHg（0）</option><option value="5">≥45mmHg（5）</option></select></div>
           <div class="swift-box">
-            <div><div style="font-size:11px;opacity:.65">SWIFT 總分</div><div class="big" id="sw-big">0</div></div>
+            <div><div style="font-size:21px;opacity:.65">SWIFT 總分</div><div class="big" id="sw-big">0</div></div>
             <div id="sw-risk" class="chip cok">低風險</div>
           </div>
         </div>
@@ -367,13 +371,13 @@ textarea{resize:none}
               <option value="alert">有介入措施</option>
             </select>
           </div>
-          <div id="ex-preview" style="font-size:13px;color:var(--g4);margin-bottom:14px;padding:10px 12px;background:var(--g1);border-radius:var(--rs)">篩選後共 <span id="ex-count" style="font-weight:700;color:var(--navy)">0</span> 筆記錄</div>
+          <div id="ex-preview" style="font-size:21px;color:var(--g4);margin-bottom:14px;padding:10px 12px;background:var(--g1);border-radius:var(--rs)">篩選後共 <span id="ex-count" style="font-weight:700;color:var(--navy)">0</span> 筆記錄</div>
           <button class="bp" onclick="exportCSV()">下載 CSV 檔案</button>
         </div>
       </div>
       <div class="stitle">匯出欄位說明</div>
       <div class="card"><div class="cb" style="padding:12px 16px">
-        <div style="font-size:12px;color:var(--g6);line-height:2">
+        <div style="font-size:20px;color:var(--g6);line-height:2">
           病歷號碼、病人姓名、床號、轉出單位、轉出日期、ICU住院天數<br>
           SWIFT總分、SWIFT風險等級<br>
           RAPID-R/A/P/I/D（各項pass/fail）<br>
@@ -400,13 +404,13 @@ textarea{resize:none}
     <div class="ovhandle"></div>
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px">
       <div><div class="ovtitle" id="ov-name"></div><div class="ovsub" id="ov-sub"></div></div>
-      <button onclick="closeOv()" style="background:var(--g1);border:none;border-radius:8px;padding:6px 12px;font-size:12px;color:var(--g6);cursor:pointer;font-family:inherit;font-weight:600">關閉</button>
+      <button onclick="closeOv()" style="background:var(--g1);border:none;border-radius:8px;padding:6px 12px;font-size:20px;color:var(--g6);cursor:pointer;font-family:inherit;font-weight:600">關閉</button>
     </div>
     <!-- visit timeline status bar -->
     <div class="vtl" id="ov-vtl">
-      <div class="vtlitem" id="vtl-pre"><span class="vt-icon" style="font-size:14px">①</span>轉出前評估</div>
-      <div class="vtlitem" id="vtl-24"><span class="vt-icon" style="font-size:14px">②</span>24hr 訪視</div>
-      <div class="vtlitem" id="vtl-48"><span class="vt-icon" style="font-size:14px">③</span>48hr 訪視</div>
+      <div class="vtlitem" id="vtl-pre"><span class="vt-icon" style="font-size:20px">①</span>轉出前評估</div>
+      <div class="vtlitem" id="vtl-24"><span class="vt-icon" style="font-size:20px">②</span>24hr 訪視</div>
+      <div class="vtlitem" id="vtl-48"><span class="vt-icon" style="font-size:20px">③</span>48hr 訪視</div>
     </div>
     <div class="stitle">基本資料</div>
     <div class="card"><div class="cb" style="padding:10px 16px" id="ov-basic"></div></div>
@@ -657,34 +661,78 @@ async function loadList() {
     .from('patients_view')
     .select('*')
     .eq('status','active')
+    .order('swift_total', {ascending:false})
     .order('transfer_date', {ascending:false});
   if (error) { toast('載入失敗：'+error.message); return; }
   const c = document.getElementById('pt-list');
   if (!pts || !pts.length) {
-    c.innerHTML='<div class="empty"><div class="ei" style="font-size:40px;opacity:.3">—</div><h3>尚無追蹤病人</h3><p>點擊右上角「＋ 新增」開始建立記錄</p></div>';
+    c.innerHTML='<div class="empty"><div class="ei" style="font-size:42px;opacity:.3">—</div><h3>尚無追蹤病人</h3><p>點擊右上角「＋ 新增」開始建立記錄</p></div>';
     return;
   }
-  c.innerHTML = pts.map(p=>{
+
+  function ptRow(p) {
     const hasInt = parseInt(p.intervention_count||0)>0;
     const done48 = !!p.v48_id, done24 = !!p.v24_id;
     const dot = hasInt?'dalert':done48?'dok':'dpend';
     const cc  = hasInt?'calert':done48?'cok':'cpend';
     const ct  = hasInt?'需介入':done48?'已完成':'待追蹤';
-    const sc  = parseInt(p.swift_total||0)>=15?'calert':'cok';
     const vis = done48?'追蹤完成 ✓':done24?'48hr 待訪視':'24hr 待訪視';
     return `<div class="ptr" onclick="openPt('${p.id}')">
       <div class="ptav">${p.name.slice(-2)}</div>
       <div class="pti">
         <div class="ptn">${p.name}
-          <span class="chip ${cc}" style="font-size:10px">${ct}</span>
-          <span class="chip ${sc}" style="font-size:10px">SWIFT ${p.swift_total||0}</span>
+          <span class="chip ${cc}" style="font-size:20px">${ct}</span>
+          <span class="chip calert" style="font-size:20px">SWIFT ${p.swift_total||0}</span>
         </div>
         <div class="ptm">${p.mrn} · ${p.bed||'—'} · ${p.transfer_unit||'—'}</div>
         <div class="ptm">轉出：${p.transfer_date} · ${vis}</div>
       </div>
       <div class="sdot ${dot}"></div>
     </div>`;
-  }).join('');
+  }
+  function ptRowLow(p) {
+    const hasInt = parseInt(p.intervention_count||0)>0;
+    const done48 = !!p.v48_id, done24 = !!p.v24_id;
+    const dot = hasInt?'dalert':done48?'dok':'dpend';
+    const cc  = hasInt?'calert':done48?'cok':'cpend';
+    const ct  = hasInt?'需介入':done48?'已完成':'待追蹤';
+    const vis = done48?'追蹤完成 ✓':done24?'48hr 待訪視':'24hr 待訪視';
+    return `<div class="ptr" onclick="openPt('${p.id}')">
+      <div class="ptav" style="background:var(--teal)">${p.name.slice(-2)}</div>
+      <div class="pti">
+        <div class="ptn">${p.name}
+          <span class="chip ${cc}" style="font-size:20px">${ct}</span>
+          <span class="chip cok" style="font-size:20px">SWIFT ${p.swift_total||0}</span>
+        </div>
+        <div class="ptm">${p.mrn} · ${p.bed||'—'} · ${p.transfer_unit||'—'}</div>
+        <div class="ptm">轉出：${p.transfer_date} · ${vis}</div>
+      </div>
+      <div class="sdot ${dot}"></div>
+    </div>`;
+  }
+
+  const high = pts.filter(p=>parseInt(p.swift_total||0)>=15);
+  const low  = pts.filter(p=>parseInt(p.swift_total||0)<15);
+
+  let html = '';
+
+  if (high.length) {
+    html += `<div style="display:flex;align-items:center;gap:8px;padding:10px 16px 6px;border-bottom:1px solid var(--g2)">
+      <span style="font-size:21px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--red)">高風險（SWIFT ≥15）</span>
+      <span class="chip calert" style="font-size:20px">${high.length} 人</span>
+    </div>`;
+    html += high.map(ptRow).join('');
+  }
+
+  if (low.length) {
+    html += `<div style="display:flex;align-items:center;gap:8px;padding:10px 16px 6px;border-bottom:1px solid var(--g2);${high.length?'border-top:1px solid var(--g2);margin-top:4px':''}">
+      <span style="font-size:21px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--teal)">低風險（SWIFT &lt;15）</span>
+      <span class="chip cok" style="font-size:20px">${low.length} 人</span>
+    </div>`;
+    html += low.map(ptRowLow).join('');
+  }
+
+  c.innerHTML = html;
 }
 
 // ══════════════════════════════════════════════════════════
@@ -712,7 +760,7 @@ async function openPt(id) {
   const rrows = ['r','a','p','i','d'].map(k=>{
     const v=p['rapid_'+k];
     return `<div class="ir"><span class="k">${rl[k]}</span>
-      <span class="chip ${v==='pass'?'cok':v==='fail'?'calert':'cgray'}" style="font-size:10px">
+      <span class="chip ${v==='pass'?'cok':v==='fail'?'calert':'cgray'}" style="font-size:20px">
         ${v==='pass'?'✓ 通過':v==='fail'?'✗ 未達標':'未填'}</span></div>`;
   }).join('<div class="dv"></div>');
 
@@ -722,10 +770,10 @@ async function openPt(id) {
     <div class="ir"><span class="k">轉出單位</span><span class="v">${p.transfer_unit||'—'}</span></div><div class="dv"></div>
     <div class="ir"><span class="k">ICU 住院天數</span><span class="v">${p.icu_days||'—'} 天</span></div><div class="dv"></div>
     <div class="ir"><span class="k">SWIFT Score</span><span class="v">${p.swift_total} 分
-      <span class="chip ${parseInt(p.swift_total)>=15?'calert':'cok'}" style="font-size:10px">
+      <span class="chip ${parseInt(p.swift_total)>=15?'calert':'cok'}" style="font-size:20px">
         ${parseInt(p.swift_total)>=15?'高風險':'低風險'}</span></span></div>
     <div class="dv"></div>
-    <div style="font-size:11px;font-weight:700;color:var(--g4);margin:8px 0 4px;letter-spacing:.06em">RAPID-ICU</div>
+    <div style="font-size:21px;font-weight:700;color:var(--g4);margin:8px 0 4px;letter-spacing:.06em">RAPID-ICU</div>
     ${rrows}`;
 
   document.getElementById('ov-v24').innerHTML = renderVisit('24h',v24,true);
@@ -746,17 +794,17 @@ function renderVisit(type, visit, prevDone) {
     const ints=Object.keys(il).filter(k=>visit[k]).map(k=>il[k]).join('、');
     const rr=['r','a','p','i','d'].map(k=>{
       const v=visit['rapid_'+k]; if(!v) return '';
-      return `<span class="chip ${v==='pass'?'cok':'calert'}" style="font-size:10px">${k.toUpperCase()}${v==='pass'?'✓':'✗'}</span>`;
+      return `<span class="chip ${v==='pass'?'cok':'calert'}" style="font-size:20px">${k.toUpperCase()}${v==='pass'?'✓':'✗'}</span>`;
     }).join(' ');
     return `<div class="cb" style="padding:12px 16px">
       <div class="ir"><span class="k">訪視時間</span><span class="v">${visit.visited_time||'—'}</span></div><div class="dv"></div>
       <div class="ir"><span class="k">訪視者</span><span class="v">${visit.rt_name||'—'}</span></div>
       ${rr?`<div class="dv"></div><div class="ir"><span class="k">RAPID</span><div style="display:flex;gap:4px;flex-wrap:wrap">${rr}</div></div>`:''}
       ${ints?`<div class="dv"></div><div class="ir"><span class="k">介入措施</span><span class="v">${ints}</span></div>`:''}
-      ${visit.notes?`<div class="dv"></div><div style="font-size:12px;color:var(--g4);margin-top:6px">備註</div><div style="font-size:13px;margin-top:4px">${visit.notes}</div>`:''}
+      ${visit.notes?`<div class="dv"></div><div style="font-size:20px;color:var(--g4);margin-top:6px">備註</div><div style="font-size:21px;margin-top:4px">${visit.notes}</div>`:''}
     </div>`;
   }
-  if (!prevDone) return `<div class="cb" style="font-size:13px;color:var(--g4);padding:14px 16px">請先完成 24hr 訪視</div>`;
+  if (!prevDone) return `<div class="cb" style="font-size:21px;color:var(--g4);padding:14px 16px">請先完成 24hr 訪視</div>`;
   const prefix = type==='24h'?'v24':'v48';
   const rapid_html = RAPID_DEF.map(d=>`
     <div class="ri">
@@ -776,10 +824,10 @@ function renderVisit(type, visit, prevDone) {
       <label class="fl">訪視時間</label>
       <input type="text" id="vt-${type}" value="${now}">
     </div>
-    <div style="font-size:11px;font-weight:700;color:var(--g4);padding:10px 16px 2px;letter-spacing:.06em">RAPID 追蹤評估</div>
+    <div style="font-size:21px;font-weight:700;color:var(--g4);padding:10px 16px 2px;letter-spacing:.06em">RAPID 追蹤評估</div>
     ${rapid_html}
     <div style="padding:12px 16px">
-      <div style="font-size:11px;font-weight:700;color:var(--g4);margin-bottom:8px;letter-spacing:.06em">介入措施（可複選）</div>
+      <div style="font-size:21px;font-weight:700;color:var(--g4);margin-bottom:8px;letter-spacing:.06em">介入措施（可複選）</div>
       <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px">${int_html}</div>
       <div class="fr"><label class="fl">備註</label><textarea id="vn-${type}" rows="3" placeholder="異常狀況、通知記錄…"></textarea></div>
       <button class="bp" onclick="saveVisit('${type}')">儲存 ${type} 訪視記錄</button>
@@ -939,8 +987,8 @@ async function loadUsers() {
         ${u.name.slice(-1)}</div>
       <div style="flex:1">
         <div class="un">${u.name}
-          <span class="chip cnavy" style="font-size:10px">${roleL(u.role)}</span>
-          ${u.is_active===false?'<span class="chip cgray" style="font-size:10px">已停用</span>':''}
+          <span class="chip cnavy" style="font-size:20px">${roleL(u.role)}</span>
+          ${u.is_active===false?'<span class="chip cgray" style="font-size:20px">已停用</span>':''}
         </div>
         <div class="um">${u.eid} · ${u.dept||'—'}</div>
       </div>
@@ -948,7 +996,7 @@ async function loadUsers() {
         ? `<button class="${u.is_active!==false?'bwarn':'bsm'}"
              onclick="toggleUser('${u.id}',${u.is_active===false})">
              ${u.is_active!==false?'停用':'啟用'}</button>`
-        : '<span style="font-size:11px;color:var(--g4)">自己</span>'}
+        : '<span style="font-size:21px;color:var(--g4)">自己</span>'}
     </div>`).join('');
 }
 
