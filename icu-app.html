@@ -474,8 +474,16 @@ async function init() {
 }
 
 async function loadProfile(uid) {
-  const { data } = await sb.from('profiles').select('*').eq('id', uid).single();
-  if (data && data.is_active !== false) CU = data;
+  const { data, error } = await sb.from('profiles').select('*').eq('id', uid).single();
+  if (error) { console.error('loadProfile error:', error); return; }
+  if (data) {
+    if (data.is_active === false) {
+      await sb.auth.signOut();
+      showErr('帳號已停用，請聯絡管理員');
+      return;
+    }
+    CU = data;
+  }
 }
 
 function showLogin() {
@@ -508,7 +516,10 @@ async function login() {
     const { data, error } = await sb.auth.signInWithPassword({ email, password: pw });
     if (error) throw new Error('員工編號或密碼錯誤');
     await loadProfile(data.user.id);
-    if (!CU) throw new Error('帳號已停用，請聯絡管理員');
+    if (!CU) {
+      await sb.auth.signOut();
+      throw new Error('找不到使用者資料，請聯絡管理員');
+    }
     showApp();
   } catch(e) { showErr(e.message); }
   finally    { btn.textContent = '登　入'; btn.disabled = false; }
