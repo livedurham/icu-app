@@ -32,13 +32,13 @@ body{font-family:'DM Sans','Noto Sans TC',sans-serif;background:var(--g1);color:
   background:linear-gradient(150deg,#051B35 0%,#0B3D6B 45%,#0E7C6A 100%);
   display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 24px;
 }
-.login-logo{text-align:center;margin-bottom:20px}
+.login-logo{text-align:center;margin-bottom:16px}
 .login-logo .icon{display:block;margin-bottom:12px;}
 .login-logo h1{font-size:30px;font-weight:700;color:white;letter-spacing:-.01em}
 .login-logo p{font-size:21px;color:rgba(255,255,255,.55);margin-top:5px}
 .login-box{background:white;border-radius:20px;padding:22px 18px;width:100%;max-width:380px;box-shadow:0 24px 64px rgba(0,0,0,.3)}
-.lf{margin-bottom:12px}
-.lf label{display:block;font-size:21px;font-weight:700;color:var(--g4);margin-bottom:6px;letter-spacing:.08em;text-transform:uppercase}
+.lf{margin-bottom:10px}
+.lf label{display:block;font-size:13px;font-weight:700;color:var(--g4);margin-bottom:5px;letter-spacing:.06em;text-transform:uppercase}
 .lf input{width:100%;padding:13px 14px;border:1.5px solid var(--g2);border-radius:var(--rs);font-size:21px;font-family:inherit;background:var(--g1);color:var(--g8);outline:none;transition:border .15s,background .15s;-webkit-appearance:none}
 .lf input:focus{border-color:var(--navy2);background:white}
 .btn-login{width:100%;padding:14px;border-radius:var(--rs);background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);color:white;border:none;font-size:20px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:6px;letter-spacing:.01em}
@@ -191,7 +191,7 @@ textarea{resize:none}
 <!-- ════════════ LOGIN ════════════ -->
 <div id="login-screen">
   <div class="login-logo">
-    <img src="data:image/jpeg;base64,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" style="width:56px;height:56px;border-radius:12px;display:block;margin:0 auto 12px;filter:drop-shadow(0 4px 12px rgba(0,0,0,.3))" alt="SKH">
+    <img src="data:image/jpeg;base64,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" style="width:64px;height:64px;border-radius:14px;display:block;margin:0 auto 10px;box-shadow:0 4px 16px rgba(0,0,0,.25)" alt="SKH">
     <h1>ICU 轉出與訪查系統</h1>
     <p>新光吳火獅紀念醫院 · 品質改善專案</p>
   </div>
@@ -201,204 +201,10 @@ textarea{resize:none}
     <button class="btn-login" onclick="login()">登　入</button>
     <div class="login-err" id="l-err"></div>
     <div class="login-hint">忘記密碼請聯絡管理員</div>
-  </div>
-  <div style="margin-top:20px;text-align:center;color:rgba(255,255,255,.35);font-size:21px;line-height:1.9">
-    <div>Developer　林鎮均</div>
-    <div>Version 1.0　2026-05-29</div>
-  </div>
-</div>
-
-<!-- ════════════ APP ════════════ -->
-<div id="app">
-  <div class="topbar">
-    <div class="topbar-inner">
-      <div>
-        <h1 id="tb-title">ICU 轉出追蹤</h1>
-        <small id="tb-user"></small>
-      </div>
-      <div style="display:flex;gap:7px">
-        <button class="nb" id="tb-action" onclick="tbAction()">新增</button>
-        <button class="nb" onclick="logout()">登出</button>
-      </div>
+    <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--g2);text-align:center;color:var(--g4);font-size:13px;line-height:1.9">
+      <div>Developer　林鎮均</div>
+      <div>Version 1.0　2026-05-29</div>
     </div>
-  </div>
-
-  <div class="pages">
-    <!-- 追蹤列表 -->
-    <div class="page active" id="pg-list">
-      <!-- 頁簽 -->
-      <div style="display:flex;background:white;border-radius:var(--r);box-shadow:var(--sh);margin-bottom:10px;overflow:hidden">
-        <button id="lt-pending" onclick="switchListTab('pending')"
-          style="flex:1;padding:12px 8px;border:none;background:var(--navy);color:white;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;transition:all .15s">
-          待訪視 <span id="lt-pending-count" style="background:rgba(255,255,255,.25);border-radius:20px;padding:2px 8px;font-size:12px;margin-left:4px">0</span>
-        </button>
-        <button id="lt-done" onclick="switchListTab('done')"
-          style="flex:1;padding:12px 8px;border:none;background:white;color:var(--g4);font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;transition:all .15s">
-          已完成 <span id="lt-done-count" style="background:var(--g2);border-radius:20px;padding:2px 8px;font-size:12px;margin-left:4px">0</span>
-        </button>
-      </div>
-      <div class="card"><div id="pt-list"></div></div>
-    </div>
-
-    <!-- 新增病人 -->
-    <div class="page" id="pg-add">
-      <div class="card">
-        <div class="ch"><span class="ct">基本資料</span></div>
-        <div class="cb">
-          <div class="g2c">
-            <div class="fr"><label class="fl">病人姓名 *</label><input type="text" id="a-name" placeholder="王小明"></div>
-            <div class="fr"><label class="fl">病歷號碼 *</label><input type="text" id="a-mrn" placeholder="12345678" maxlength="8" inputmode="numeric" pattern="[0-9]{8}"></div>
-          </div>
-          <div class="g2c">
-            <div class="fr"><label class="fl">轉入床號</label><input type="text" id="a-bed" placeholder="5001"></div>
-            <div class="fr"><label class="fl">轉出單位</label>
-              <select id="a-unit"><option value="">選擇病房</option>
-                <option>MICU 內科加護病房</option>
-                <option>SICU 外科加護病房</option>
-                <option>NRICU 神經外科加護病房</option>
-                <option>CCU 心臟加護病房</option>
-                <option>其他</option>
-              </select>
-            </div>
-          </div>
-          <div class="g2c">
-            <div class="fr"><label class="fl">轉出日期 *</label><input type="date" id="a-date"></div>
-            <div class="fr"><label class="fl">ICU 住院天數</label><input type="text" id="a-days" placeholder="7"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- RAPID-ICU -->
-      <div class="card">
-        <div class="ch"><span class="ct">RT 評估（5項，0–20分）</span><span class="chip cnavy" id="rc">0/5 項</span></div>
-        <div id="rapid-add"></div>
-      </div>
-
-      <!-- SWIFT -->
-      <div class="card">
-        <div class="ch">
-          <span class="ct">SWIFT Score</span>
-          <div style="display:flex;align-items:baseline;gap:3px">
-            <span id="sw-live" style="font-size:30px;font-weight:800;color:var(--navy)">0</span>
-            <span style="font-size:21px;color:var(--g4)">/64分</span>
-          </div>
-        </div>
-        <div style="padding:0 16px 10px">
-          <div class="swr"><div class="swl">入院來源<small>急診 / 病房或轉院</small></div>
-            <select class="swsel" id="sw-src" onchange="calcSw()"><option value="0">急診（0）</option><option value="8">病房/轉院（8）</option></select></div>
-          <div class="swr"><div class="swl">ICU 住院天數</div>
-            <select class="swsel" id="sw-los" onchange="calcSw()"><option value="0">&lt;2天（0）</option><option value="1">2–10天（1）</option><option value="14">&gt;10天（14）</option></select></div>
-          <div class="swr"><div class="swl">GCS 意識狀態</div>
-            <select class="swsel" id="sw-gcs" onchange="calcSw()"><option value="0">&gt;14（0）</option><option value="6">11–14（6）</option><option value="14">8–10（14）</option><option value="24">&lt;8（24）</option></select></div>
-          <div class="swr"><div class="swl">PaO₂/FiO₂</div>
-            <select class="swsel" id="sw-pf" onchange="calcSw()"><option value="0">&gt;400（0）</option><option value="5">150–400（5）</option><option value="10">100–150（10）</option><option value="13">&lt;100（13）</option></select></div>
-          <div class="swr"><div class="swl">PaCO₂</div>
-            <select class="swsel" id="sw-pco2" onchange="calcSw()"><option value="0">&lt;45mmHg（0）</option><option value="5">≥45mmHg（5）</option></select></div>
-          <div class="swift-box">
-            <div><div style="font-size:21px;opacity:.65">SWIFT 總分</div><div class="big" id="sw-big">0</div></div>
-            <div id="sw-risk" class="chip cok">低風險</div>
-          </div>
-        </div>
-      </div>
-      <button class="bp" onclick="savePt()">儲存病人資料</button>
-      <div style="height:14px"></div>
-    </div>
-
-    <!-- 儀表板 -->
-    <div class="page" id="pg-dash">
-      <div class="sgrid">
-        <div class="scard"><div class="snum" id="d-total" style="color:var(--navy)">—</div><div class="slbl">追蹤中病人</div></div>
-        <div class="scard"><div class="snum" id="d-swift" style="color:var(--red)">—</div><div class="slbl">SWIFT 高風險</div></div>
-        <div class="scard"><div class="snum" id="d-24h" style="color:var(--teal)">—</div><div class="slbl">24hr 完成率</div></div>
-        <div class="scard"><div class="snum" id="d-48h" style="color:var(--green)">—</div><div class="slbl">48hr 完成率</div></div>
-      </div>
-      <div class="stitle">介入統計</div>
-      <div class="card"><div class="cb">
-        <div class="ir"><span class="k">胸腔物理治療</span><span class="v" id="di-pt">—</span></div><div class="dv"></div>
-        <div class="ir"><span class="k">噴霧治療</span><span class="v" id="di-neb">—</span></div><div class="dv"></div>
-        <div class="ir"><span class="k">抽痰</span><span class="v" id="di-suct">—</span></div><div class="dv"></div>
-        <div class="ir"><span class="k">氧氣調整</span><span class="v" id="di-o2">—</span></div><div class="dv"></div>
-        <div class="ir"><span class="k">胸腔科會診</span><span class="v" id="di-con">—</span></div>
-      </div></div>
-
-    </div>
-
-    <!-- 帳號管理 (admin only) -->
-    <div class="page" id="pg-admin">
-      <div class="card">
-        <div class="ch"><span class="ct">新增使用者帳號</span></div>
-        <div class="cb">
-          <div class="g2c">
-            <div class="fr"><label class="fl">員工編號 *</label><input type="text" id="u-eid" placeholder="RT00123" autocapitalize="off"></div>
-            <div class="fr"><label class="fl">姓名 *</label><input type="text" id="u-name" placeholder="陳小明"></div>
-          </div>
-          <div class="g2c">
-            <div class="fr"><label class="fl">密碼 *</label><input type="password" id="u-pw" placeholder="至少8字元"></div>
-            <div class="fr"><label class="fl">角色</label>
-              <select id="u-role"><option value="rt">RT 呼吸治療師</option><option value="nurse">護理師</option><option value="doctor">醫師</option><option value="admin">管理員</option></select>
-            </div>
-          </div>
-          <div class="fr"><label class="fl">部門</label><input type="text" id="u-dept" placeholder="加護病房"></div>
-          <button class="bp" onclick="addUser()">新增帳號</button>
-        </div>
-      </div>
-      <div class="stitle">現有帳號</div>
-      <div class="card"><div id="u-list"></div></div>
-    </div>
-
-    <!-- 匯出 CSV -->
-    <div class="page" id="pg-export">
-      <div class="card">
-        <div class="ch"><span class="ct">匯出 CSV</span></div>
-        <div class="cb">
-          <div class="fr">
-            <label class="fl">轉出單位篩選</label>
-            <select id="ex-unit">
-              <option value="">全部單位</option>
-              <option>MICU 內科加護病房</option>
-              <option>SICU 外科加護病房</option>
-              <option>NRICU 神經外科加護病房</option>
-              <option>CCU 心臟加護病房</option>
-              <option>其他</option>
-            </select>
-          </div>
-          <div class="g2c">
-            <div class="fr"><label class="fl">開始日期</label><input type="date" id="ex-from"></div>
-            <div class="fr"><label class="fl">結束日期</label><input type="date" id="ex-to"></div>
-          </div>
-          <div class="fr">
-            <label class="fl">狀態篩選</label>
-            <select id="ex-status">
-              <option value="">全部</option>
-              <option value="pending">待追蹤</option>
-              <option value="done">已完成</option>
-              <option value="alert">有介入措施</option>
-            </select>
-          </div>
-          <div id="ex-preview" style="font-size:21px;color:var(--g4);margin-bottom:14px;padding:10px 12px;background:var(--g1);border-radius:var(--rs)">篩選後共 <span id="ex-count" style="font-weight:700;color:var(--navy)">0</span> 筆記錄</div>
-          <button class="bp" onclick="exportCSV()">下載 CSV 檔案</button>
-        </div>
-      </div>
-      <div class="stitle">匯出欄位說明</div>
-      <div class="card"><div class="cb" style="padding:12px 16px">
-        <div style="font-size:15px;color:var(--g6);line-height:2">
-          病歷號碼、病人姓名、轉入床號、轉出單位、轉出日期、ICU住院天數<br>
-          SWIFT總分、SWIFT風險等級<br>
-          RAPID-R/A/P/I/D（各項通過/未達標）<br>
-          24hr訪視時間、24hr訪視者、24hr肺部疾病史、24hr呼吸音、24hr呼吸次數、24hr咳嗽能力、24hr氧氣需求、24hr RT總分、24hr介入措施、24hr備註<br>
-          48hr訪視時間、48hr訪視者、48hr肺部疾病史、48hr呼吸音、48hr呼吸次數、48hr咳嗽能力、48hr氧氣需求、48hr RT總分、48hr介入措施、48hr備註<br>
-          建立者、建立時間
-        </div>
-      </div></div>
-    </div>
-  </div>
-
-  <!-- BOTTOM NAV -->
-  <div class="bottomnav">
-    <button class="bntab on" id="t-list" onclick="go('list')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px"><rect x="3" y="4" width="18" height="3" rx="1"/><rect x="3" y="10.5" width="18" height="3" rx="1"/><rect x="3" y="17" width="11" height="3" rx="1"/></svg>追蹤列表</button>
-    <button class="bntab" id="t-dash" onclick="go('dash')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px"><rect x="3" y="12" width="5" height="9" rx="1"/><rect x="9.5" y="7" width="5" height="14" rx="1"/><rect x="16" y="3" width="5" height="18" rx="1"/></svg>儀表板</button>
-    <button class="bntab" id="t-export" onclick="go('export')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px"><path d="M12 3v13M7 11l5 5 5-5"/><path d="M4 19h16"/></svg>匯出</button>
-    <button class="bntab" id="t-admin" onclick="go('admin')" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>帳號管理</button>
   </div>
 </div>
 
