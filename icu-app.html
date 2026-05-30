@@ -32,12 +32,12 @@ body{font-family:'DM Sans','Noto Sans TC',sans-serif;background:var(--g1);color:
   background:linear-gradient(150deg,#051B35 0%,#0B3D6B 45%,#0E7C6A 100%);
   display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 24px;
 }
-.login-logo{text-align:center;margin-bottom:36px}
+.login-logo{text-align:center;margin-bottom:20px}
 .login-logo .icon{display:block;margin-bottom:12px;}
 .login-logo h1{font-size:30px;font-weight:700;color:white;letter-spacing:-.01em}
 .login-logo p{font-size:21px;color:rgba(255,255,255,.55);margin-top:5px}
-.login-box{background:white;border-radius:20px;padding:28px 22px;width:100%;max-width:380px;box-shadow:0 24px 64px rgba(0,0,0,.3)}
-.lf{margin-bottom:16px}
+.login-box{background:white;border-radius:20px;padding:22px 18px;width:100%;max-width:380px;box-shadow:0 24px 64px rgba(0,0,0,.3)}
+.lf{margin-bottom:12px}
 .lf label{display:block;font-size:21px;font-weight:700;color:var(--g4);margin-bottom:6px;letter-spacing:.08em;text-transform:uppercase}
 .lf input{width:100%;padding:13px 14px;border:1.5px solid var(--g2);border-radius:var(--rs);font-size:21px;font-family:inherit;background:var(--g1);color:var(--g8);outline:none;transition:border .15s,background .15s;-webkit-appearance:none}
 .lf input:focus{border-color:var(--navy2);background:white}
@@ -335,7 +335,7 @@ textarea{resize:none}
           <div class="g2c">
             <div class="fr"><label class="fl">密碼 *</label><input type="password" id="u-pw" placeholder="至少8字元"></div>
             <div class="fr"><label class="fl">角色</label>
-              <select id="u-role"><option value="rt">RT 呼吸治療師</option><option value="nurse">護理師</option><option value="admin">管理員</option></select>
+              <select id="u-role"><option value="rt">RT 呼吸治療師</option><option value="nurse">護理師</option><option value="doctor">醫師</option><option value="admin">管理員</option></select>
             </div>
           </div>
           <div class="fr"><label class="fl">部門</label><input type="text" id="u-dept" placeholder="加護病房"></div>
@@ -571,7 +571,7 @@ async function logout() {
   showLogin();
 }
 
-function roleL(r) { return {admin:'管理員',rt:'RT',nurse:'護理師'}[r] || r; }
+function roleL(r) { return {admin:'管理員',rt:'RT',nurse:'護理師',doctor:'醫師'}[r] || r; }
 function today()  { return new Date().toISOString().split('T')[0]; }
 
 // ══════════════════════════════════════════════════════════
