@@ -32,18 +32,18 @@ body{font-family:'DM Sans','Noto Sans TC',sans-serif;background:var(--g1);color:
   background:linear-gradient(150deg,#051B35 0%,#0B3D6B 45%,#0E7C6A 100%);
   display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 24px;
 }
-.login-logo{text-align:center;margin-bottom:16px}
+.login-logo{text-align:center;margin-bottom:14px}
 .login-logo .icon{display:block;margin-bottom:12px;}
 .login-logo h1{font-size:30px;font-weight:700;color:white;letter-spacing:-.01em}
-.login-logo p{font-size:21px;color:rgba(255,255,255,.55);margin-top:5px}
-.login-box{background:white;border-radius:20px;padding:22px 18px;width:100%;max-width:380px;box-shadow:0 24px 64px rgba(0,0,0,.3)}
-.lf{margin-bottom:10px}
-.lf label{display:block;font-size:13px;font-weight:700;color:var(--g4);margin-bottom:5px;letter-spacing:.06em;text-transform:uppercase}
-.lf input{width:100%;padding:13px 14px;border:1.5px solid var(--g2);border-radius:var(--rs);font-size:21px;font-family:inherit;background:var(--g1);color:var(--g8);outline:none;transition:border .15s,background .15s;-webkit-appearance:none}
+.login-logo p{font-size:21px;color:rgba(255,255,255,.55);margin-top:4px}
+.login-box{background:white;border-radius:14px;padding:12px 14px;width:100%;max-width:360px;box-shadow:0 8px 32px rgba(0,0,0,.2)}
+.lf{margin-bottom:7px}
+.lf label{display:block;font-size:12px;font-weight:600;color:var(--g4);margin-bottom:3px}
+.lf input{width:100%;padding:8px 10px;border:1.5px solid var(--g2);border-radius:var(--rs);font-size:17px;font-family:inherit;background:var(--g1);color:var(--g8);outline:none;transition:border .15s,background .15s;-webkit-appearance:none}
 .lf input:focus{border-color:var(--navy2);background:white}
-.btn-login{width:100%;padding:14px;border-radius:var(--rs);background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);color:white;border:none;font-size:20px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:6px;letter-spacing:.01em}
-.login-err{background:var(--red2);color:var(--red);font-size:21px;padding:10px 14px;border-radius:var(--rs);margin-top:12px;text-align:center;display:none}
-.login-hint{font-size:21px;color:var(--g4);text-align:center;margin-top:14px}
+.btn-login{width:100%;padding:10px;border-radius:var(--rs);background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);color:white;border:none;font-size:20px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:6px;letter-spacing:.01em}
+.login-err{background:var(--red2);color:var(--red);font-size:13px;padding:8px 12px;border-radius:var(--rs);margin-top:8px;text-align:center;display:none}
+.login-hint{font-size:12px;color:var(--g4);text-align:center;margin-top:6px}
 
 /* ── APP SHELL ── */
 #app{display:flex;flex-direction:column;height:100%;display:none}
@@ -201,7 +201,7 @@ textarea{resize:none}
     <button class="btn-login" onclick="login()">登　入</button>
     <div class="login-err" id="l-err"></div>
     <div class="login-hint">忘記密碼請聯絡管理員</div>
-    <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--g2);text-align:center;color:var(--g4);font-size:13px;line-height:1.9">
+    <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--g2);text-align:center;color:var(--g4);font-size:11px;line-height:1.7">
       <div>Developer　林鎮均</div>
       <div>Version 1.0　2026-05-29</div>
     </div>
