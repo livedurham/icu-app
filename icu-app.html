@@ -611,6 +611,7 @@ function showApp() {
   buildRapidUI('rapid-add', rapidAdd, 'a');
   document.getElementById('a-date').value = today();
   go('list');
+  startIdleWatch();
   console.log('[showApp] done, app display=', appEl.style.display);
 }
 
@@ -650,6 +651,7 @@ function showErr(msg) {
   e.textContent = msg; e.style.display = 'block';
 }
 async function logout() {
+  stopIdleWatch();
   await sb.auth.signOut();
   CU = null;
   showLogin();
@@ -657,6 +659,37 @@ async function logout() {
 
 function roleL(r) { return {admin:'管理員',rt:'RT',nurse:'護理師',doctor:'醫師'}[r] || r; }
 function today()  { return new Date().toISOString().split('T')[0]; }
+
+// ══════════════════════════════════════════════════════════
+// 閒置自動登出（15分鐘）
+// ══════════════════════════════════════════════════════════
+const IDLE_TIMEOUT = 15 * 60 * 1000; // 15分鐘
+let idleTimer = null;
+
+function resetIdleTimer() {
+  clearTimeout(idleTimer);
+  idleTimer = setTimeout(async () => {
+    await sb.auth.signOut();
+    CU = null;
+    showLogin();
+    // 顯示提示
+    const e = document.getElementById('l-err');
+    e.textContent = '已閒置 15 分鐘，請重新登入';
+    e.style.display = 'block';
+  }, IDLE_TIMEOUT);
+}
+
+function startIdleWatch() {
+  ['touchstart','touchmove','click','keydown','scroll','mousemove'].forEach(evt =>
+    document.addEventListener(evt, resetIdleTimer, { passive: true }));
+  resetIdleTimer();
+}
+
+function stopIdleWatch() {
+  ['touchstart','touchmove','click','keydown','scroll','mousemove'].forEach(evt =>
+    document.removeEventListener(evt, resetIdleTimer));
+  clearTimeout(idleTimer);
+}
 
 // ══════════════════════════════════════════════════════════
 // PAGE ROUTING
