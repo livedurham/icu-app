@@ -46,7 +46,7 @@ body{font-family:'DM Sans','Noto Sans TC',sans-serif;background:var(--g1);color:
 .login-hint{font-size:12px;color:var(--g4);text-align:center;margin-top:6px}
 
 /* ── APP SHELL ── */
-#app{display:flex;flex-direction:column;height:100%;display:none}
+#app{flex-direction:column;height:100%;display:none}
 .topbar{background:var(--navy);padding:env(safe-area-inset-top) 0 0;flex-shrink:0}
 .topbar-inner{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 12px}
 .topbar h1{font-size:20px;font-weight:700;color:white;letter-spacing:.01em}
@@ -232,6 +232,260 @@ textarea{resize:none}
     <div id="ov-del"></div>
   </div>
 </div>
+
+<!-- ════════════ APP SHELL ════════════ -->
+<div id="app" style="display:none;flex-direction:column;height:100%">
+
+  <!-- Top Bar -->
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div>
+        <h1>ICU 轉出追蹤</h1>
+        <small id="tb-user"></small>
+      </div>
+      <button class="nb" id="tb-action" onclick="tbAction()">新增</button>
+    </div>
+  </div>
+
+  <!-- Pages -->
+  <div class="pages">
+
+    <!-- PAGE: LIST -->
+    <div class="page" id="pg-list">
+      <!-- Tab switcher -->
+      <div class="card" style="margin-bottom:10px;overflow:hidden">
+        <div style="display:flex">
+          <button id="lt-pending" onclick="switchListTab('pending')"
+            style="flex:1;padding:13px 8px;border:none;background:var(--navy);color:white;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer">
+            待訪視 <span id="lt-pending-count" style="background:rgba(255,255,255,.25);color:white;font-size:12px;padding:2px 7px;border-radius:20px;margin-left:4px">0</span>
+          </button>
+          <button id="lt-done" onclick="switchListTab('done')"
+            style="flex:1;padding:13px 8px;border:none;background:white;color:var(--g4);font-size:15px;font-weight:700;font-family:inherit;cursor:pointer">
+            已完成 <span id="lt-done-count" style="background:var(--g2);color:var(--g6);font-size:12px;padding:2px 7px;border-radius:20px;margin-left:4px">0</span>
+          </button>
+        </div>
+      </div>
+      <div class="card"><div id="pt-list"><div class="empty"><div class="ei">⏳</div><h3>載入中…</h3></div></div></div>
+    </div>
+
+    <!-- PAGE: ADD PATIENT -->
+    <div class="page" id="pg-add">
+      <div class="card">
+        <div class="ch"><span class="ct">基本資料</span></div>
+        <div class="cb">
+          <div class="g2c">
+            <div class="fr"><label class="fl">病人姓名 *</label><input type="text" id="a-name" placeholder="姓名"></div>
+            <div class="fr"><label class="fl">病歷號碼 *</label><input type="text" id="a-mrn" placeholder="8碼" inputmode="numeric" maxlength="8"></div>
+          </div>
+          <div class="g2c">
+            <div class="fr"><label class="fl">床號</label><input type="text" id="a-bed" placeholder="例：5A-01"></div>
+            <div class="fr"><label class="fl">ICU住院天數</label><input type="text" id="a-days" placeholder="天數" inputmode="numeric"></div>
+          </div>
+          <div class="fr"><label class="fl">轉出單位</label>
+            <select id="a-unit">
+              <option value="">— 請選擇 —</option>
+              <option>3東</option><option>3西</option><option>4東</option><option>4西</option>
+              <option>5東</option><option>5西</option><option>6東</option><option>6西</option>
+              <option>7東</option><option>7西</option><option>8東</option><option>8西</option>
+              <option>9東</option><option>9西</option><option>10東</option><option>10西</option>
+              <option>11東</option><option>11西</option><option>其他</option>
+            </select>
+          </div>
+          <div class="fr"><label class="fl">轉出日期 *</label><input type="date" id="a-date"></div>
+        </div>
+      </div>
+
+      <!-- SWIFT Score -->
+      <div class="card">
+        <div class="ch">
+          <span class="ct">SWIFT Score <small style="font-size:12px;color:var(--g4);font-weight:400">（轉出前）</small></span>
+          <span class="chip calert" id="sw-live">0</span>
+        </div>
+        <div class="cb">
+          <div class="swr">
+            <div class="swl">入院來源<small>Admission Source</small></div>
+            <select class="swsel" id="sw-src" onchange="calcSw()">
+              <option value="0">急診（0分）</option>
+              <option value="8">一般病房或轉院（8分）</option>
+            </select>
+          </div>
+          <div class="swr">
+            <div class="swl">ICU住院天數<small>Length of Stay</small></div>
+            <select class="swsel" id="sw-los" onchange="calcSw()">
+              <option value="0">少於2天（0分）</option>
+              <option value="1">2–10天（1分）</option>
+              <option value="14">超過10天（14分）</option>
+            </select>
+          </div>
+          <div class="swr">
+            <div class="swl">意識狀態 GCS<small>Neurological</small></div>
+            <select class="swsel" id="sw-gcs" onchange="calcSw()">
+              <option value="0">GCS &gt;14（0分）</option>
+              <option value="6">GCS 11–14（6分）</option>
+              <option value="14">GCS 8–10（14分）</option>
+              <option value="24">GCS &lt;8（24分）</option>
+            </select>
+          </div>
+          <div class="swr">
+            <div class="swl">氧合能力<small>PaO₂/FiO₂ Ratio</small></div>
+            <select class="swsel" id="sw-pf" onchange="calcSw()">
+              <option value="0">&gt;400（0分）</option>
+              <option value="5">150–400（5分）</option>
+              <option value="10">100–150（10分）</option>
+              <option value="13">&lt;100（13分）</option>
+            </select>
+          </div>
+          <div class="swr">
+            <div class="swl">通氣功能<small>Last PaCO₂</small></div>
+            <select class="swsel" id="sw-pco2" onchange="calcSw()">
+              <option value="0">&lt;45 mmHg（0分）</option>
+              <option value="5">≥45 mmHg（5分）</option>
+            </select>
+          </div>
+          <div class="swift-box">
+            <div>
+              <div style="font-size:13px;opacity:.7;margin-bottom:2px">SWIFT 總分</div>
+              <div class="big" id="sw-big">0</div>
+            </div>
+            <span class="chip cok" id="sw-risk" style="font-size:14px">低風險</span>
+          </div>
+          <div style="font-size:12px;color:var(--g4);margin-top:8px;line-height:1.6">
+            ≥15分：轉出後7天內重返ICU或死亡風險顯著增加
+          </div>
+        </div>
+      </div>
+
+      <!-- RAPID-ICU -->
+      <div class="card">
+        <div class="ch">
+          <span class="ct">RAPID-ICU 轉出前評估</span>
+          <span class="chip cnavy" id="rc">0/5</span>
+        </div>
+        <div id="rapid-add"></div>
+      </div>
+
+      <button class="bp" onclick="savePt()">儲存病人資料</button>
+    </div>
+
+    <!-- PAGE: DASHBOARD -->
+    <div class="page" id="pg-dash">
+      <div class="sgrid">
+        <div class="scard"><div class="snum" id="d-total">—</div><div class="slbl">追蹤中病人</div></div>
+        <div class="scard"><div class="snum" id="d-swift">—</div><div class="slbl">高風險（SWIFT≥15）</div></div>
+        <div class="scard"><div class="snum" id="d-24h">—</div><div class="slbl">24hr訪視完成率</div></div>
+        <div class="scard"><div class="snum" id="d-48h">—</div><div class="slbl">48hr訪視完成率</div></div>
+      </div>
+      <div class="card">
+        <div class="ch"><span class="ct">介入措施統計</span></div>
+        <div class="cb">
+          <div class="ir"><span class="k">胸腔物理治療</span><span class="v" id="di-pt">—</span></div><div class="dv"></div>
+          <div class="ir"><span class="k">噴霧治療</span><span class="v" id="di-neb">—</span></div><div class="dv"></div>
+          <div class="ir"><span class="k">抽痰</span><span class="v" id="di-suct">—</span></div><div class="dv"></div>
+          <div class="ir"><span class="k">氧氣調整</span><span class="v" id="di-o2">—</span></div><div class="dv"></div>
+          <div class="ir"><span class="k">胸腔科會診</span><span class="v" id="di-con">—</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ch"><span class="ct">RAPID-ICU 通過率</span></div>
+        <div class="cb">
+          <div class="ir"><span class="k">R — 呼吸頻率</span><span class="v" id="dr-R">—</span></div><div class="dv"></div>
+          <div class="ir"><span class="k">A — 呼吸道保護</span><span class="v" id="dr-A">—</span></div><div class="dv"></div>
+          <div class="ir"><span class="k">P — 脫管穩定</span><span class="v" id="dr-P">—</span></div><div class="dv"></div>
+          <div class="ir"><span class="k">I — 氧氣需求</span><span class="v" id="dr-I">—</span></div><div class="dv"></div>
+          <div class="ir"><span class="k">D — 分泌物</span><span class="v" id="dr-D">—</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: EXPORT -->
+    <div class="page" id="pg-export">
+      <div class="card">
+        <div class="ch"><span class="ct">資料匯出</span></div>
+        <div class="cb">
+          <div class="fr"><label class="fl">轉出單位</label>
+            <select id="ex-unit">
+              <option value="">全部單位</option>
+              <option>3東</option><option>3西</option><option>4東</option><option>4西</option>
+              <option>5東</option><option>5西</option><option>6東</option><option>6西</option>
+              <option>7東</option><option>7西</option><option>8東</option><option>8西</option>
+              <option>9東</option><option>9西</option><option>10東</option><option>10西</option>
+              <option>11東</option><option>11西</option>
+            </select>
+          </div>
+          <div class="g2c">
+            <div class="fr"><label class="fl">起始日期</label><input type="date" id="ex-from"></div>
+            <div class="fr"><label class="fl">結束日期</label><input type="date" id="ex-to"></div>
+          </div>
+          <div class="fr"><label class="fl">狀態篩選</label>
+            <select id="ex-status">
+              <option value="">全部</option>
+              <option value="done">已完成48hr訪視</option>
+              <option value="pending">尚未完成24hr訪視</option>
+              <option value="alert">有介入措施</option>
+            </select>
+          </div>
+          <div style="font-size:14px;color:var(--g4);margin-bottom:12px">符合條件：<strong id="ex-count">0</strong> 筆</div>
+          <button class="bp" onclick="exportCSV()">匯出 CSV</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: ADMIN -->
+    <div class="page" id="pg-admin">
+      <div class="card">
+        <div class="ch"><span class="ct">新增使用者</span></div>
+        <div class="cb">
+          <div class="g2c">
+            <div class="fr"><label class="fl">員工編號 *</label><input type="text" id="u-eid" placeholder="M000000" autocapitalize="off"></div>
+            <div class="fr"><label class="fl">姓名 *</label><input type="text" id="u-name" placeholder="姓名"></div>
+          </div>
+          <div class="g2c">
+            <div class="fr"><label class="fl">密碼 *</label><input type="password" id="u-pw" placeholder="至少8碼"></div>
+            <div class="fr"><label class="fl">部門</label><input type="text" id="u-dept" placeholder="例：加護病房"></div>
+          </div>
+          <div class="fr"><label class="fl">角色</label>
+            <select id="u-role">
+              <option value="rt">RT 呼吸治療師</option>
+              <option value="nurse">護理師</option>
+              <option value="doctor">醫師</option>
+              <option value="admin">管理員</option>
+            </select>
+          </div>
+          <button class="bp" onclick="addUser()">新增帳號</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ch"><span class="ct">使用者列表</span></div>
+        <div id="u-list"></div>
+      </div>
+      <div style="margin-top:16px">
+        <button class="bdanger" style="width:100%" onclick="logout()">登出系統</button>
+      </div>
+    </div>
+
+  </div><!-- end .pages -->
+
+  <!-- Bottom Nav -->
+  <div class="bottomnav">
+    <button class="bntab on" id="t-list" onclick="go('list')">
+      <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+      追蹤清單
+    </button>
+    <button class="bntab" id="t-dash" onclick="go('dash')">
+      <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      統計
+    </button>
+    <button class="bntab" id="t-export" onclick="go('export')">
+      <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      匯出
+    </button>
+    <button class="bntab" id="t-admin" onclick="go('admin')" style="display:none">
+      <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      管理
+    </button>
+  </div>
+
+</div><!-- end #app -->
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
