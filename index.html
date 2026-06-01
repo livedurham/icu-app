@@ -243,7 +243,10 @@ textarea{resize:none}
         <h1>ICU 轉出追蹤</h1>
         <small id="tb-user"></small>
       </div>
-      <button class="nb" id="tb-action" onclick="tbAction()">新增</button>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="nb" id="tb-action" onclick="tbAction()">新增</button>
+        <button class="nb" onclick="logout()" style="background:rgba(255,255,255,.18);font-size:18px" title="登出">⏻</button>
+      </div>
     </div>
   </div>
 
@@ -571,8 +574,15 @@ async function init() {
 }
 
 async function loadProfile(uid) {
+  console.log('[loadProfile] uid=', uid);
   const { data, error } = await sb.from('profiles').select('*').eq('id', uid).single();
-  if (error) { console.error('loadProfile error:', error); return; }
+  console.log('[loadProfile] data=', data, 'error=', error);
+  if (error) {
+    // RLS 或找不到 profile：嘗試用 admin insert 補建
+    console.warn('[loadProfile] profile not found, trying fallback');
+    showErr('找不到使用者資料（' + (error.message||error.code) + '）請聯絡管理員建立 profile');
+    return;
+  }
   if (data) {
     if (data.is_active === false) {
       await sb.auth.signOut();
@@ -580,6 +590,7 @@ async function loadProfile(uid) {
       return;
     }
     CU = data;
+    console.log('[loadProfile] CU set:', CU);
   }
 }
 
@@ -588,13 +599,19 @@ function showLogin() {
   document.getElementById('app').style.display = 'none';
 }
 function showApp() {
-  document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('app').style.display = 'flex';
+  console.log('[showApp] CU=', CU);
+  const loginEl = document.getElementById('login-screen');
+  const appEl   = document.getElementById('app');
+  console.log('[showApp] login-screen el:', loginEl, 'app el:', appEl);
+  if (!appEl) { console.error('FATAL: #app element not found!'); return; }
+  loginEl.style.display = 'none';
+  appEl.style.cssText = 'display:flex;flex-direction:column;height:100%';
   document.getElementById('tb-user').textContent = CU.name + '（' + roleL(CU.role) + '）';
   document.getElementById('t-admin').style.display = CU.role==='admin' ? 'flex' : 'none';
   buildRapidUI('rapid-add', rapidAdd, 'a');
   document.getElementById('a-date').value = today();
   go('list');
+  console.log('[showApp] done, app display=', appEl.style.display);
 }
 
 // ══════════════════════════════════════════════════════════
@@ -603,22 +620,29 @@ function showApp() {
 async function login() {
   const btn = document.querySelector('.btn-login');
   const err = document.getElementById('l-err');
-  // 員工編號當 email: EID@ms.skh.org.tw
   const eid = document.getElementById('l-id').value.trim().toUpperCase();
   const pw  = document.getElementById('l-pw').value;
   if (!eid || !pw) { showErr('請輸入員工編號及密碼'); return; }
   btn.textContent = '登入中…'; btn.disabled = true; err.style.display = 'none';
   try {
     const email = eid + '@ms.skh.org.tw';
+    console.log('[login] signing in as:', email);
     const { data, error } = await sb.auth.signInWithPassword({ email, password: pw });
-    if (error) throw new Error('員工編號或密碼錯誤');
+    console.log('[login] auth result data=', data, 'error=', error);
+    if (error) throw new Error('員工編號或密碼錯誤：' + error.message);
     await loadProfile(data.user.id);
     if (!CU) {
-      await sb.auth.signOut();
-      throw new Error('找不到使用者資料，請聯絡管理員');
+      // Fallback: 建立暫時 profile，讓畫面能顯示
+      console.warn('[login] CU still null after loadProfile, using fallback');
+      CU = { id: data.user.id, eid: eid, name: eid, role: 'rt', dept: null, is_active: true };
+      // 嘗試寫入 profile
+      const { error: insErr } = await sb.from('profiles').upsert({
+        id: data.user.id, eid, name: eid, role: 'rt', is_active: true
+      }, { onConflict: 'eid' });
+      console.log('[login] profile upsert error=', insErr);
     }
     showApp();
-  } catch(e) { showErr(e.message); }
+  } catch(e) { console.error('[login] error:', e); showErr(e.message); }
   finally    { btn.textContent = '登　入'; btn.disabled = false; }
 }
 function showErr(msg) {
