@@ -284,14 +284,14 @@ textarea{resize:none}
             <div class="fr"><label class="fl">床號</label><input type="text" id="a-bed" placeholder="例：5A-01"></div>
             <div class="fr"><label class="fl">ICU住院天數</label><input type="text" id="a-days" placeholder="天數" inputmode="numeric"></div>
           </div>
-          <div class="fr"><label class="fl">轉出單位</label>
+          <div class="fr"><label class="fl">轉出單位（ICU）</label>
             <select id="a-unit">
               <option value="">— 請選擇 —</option>
-              <option>3東</option><option>3西</option><option>4東</option><option>4西</option>
-              <option>5東</option><option>5西</option><option>6東</option><option>6西</option>
-              <option>7東</option><option>7西</option><option>8東</option><option>8西</option>
-              <option>9東</option><option>9西</option><option>10東</option><option>10西</option>
-              <option>11東</option><option>11西</option><option>其他</option>
+              <option value="MICU">MICU 內科加護病房</option>
+              <option value="SICU">SICU 外科加護病房</option>
+              <option value="NRICU">NRICU 神經外科加護病房</option>
+              <option value="CCU">CCU 心臟加護病房</option>
+              <option value="其他">其他</option>
             </select>
           </div>
           <div class="fr"><label class="fl">轉出日期 *</label><input type="date" id="a-date"></div>
@@ -405,14 +405,14 @@ textarea{resize:none}
       <div class="card">
         <div class="ch"><span class="ct">資料匯出</span></div>
         <div class="cb">
-          <div class="fr"><label class="fl">轉出單位</label>
+          <div class="fr"><label class="fl">轉出單位（ICU）</label>
             <select id="ex-unit">
               <option value="">全部單位</option>
-              <option>3東</option><option>3西</option><option>4東</option><option>4西</option>
-              <option>5東</option><option>5西</option><option>6東</option><option>6西</option>
-              <option>7東</option><option>7西</option><option>8東</option><option>8西</option>
-              <option>9東</option><option>9西</option><option>10東</option><option>10西</option>
-              <option>11東</option><option>11西</option>
+              <option value="MICU">MICU 內科加護病房</option>
+              <option value="SICU">SICU 外科加護病房</option>
+              <option value="NRICU">NRICU 神經外科加護病房</option>
+              <option value="CCU">CCU 心臟加護病房</option>
+              <option value="其他">其他</option>
             </select>
           </div>
           <div class="g2c">
