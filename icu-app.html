@@ -194,7 +194,7 @@ textarea{resize:none}
     <div class="login-hint">忘記密碼請聯絡管理員</div>
     <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--g2);text-align:center;color:var(--g4);font-size:11px;line-height:1.7">
       <div>Developer　林鎮均</div>
-      <div>Version 1.0　2026-05-29</div>
+      <div>Version 1.01　2026-06-03</div>
     </div>
   </div>
 </div>
@@ -921,15 +921,15 @@ function renderList(pts) {
   let out = '';
 
   if (high.length) {
-    out += `<div style="display:flex;align-items:center;gap:8px;padding:10px 16px 6px;border-bottom:1px solid var(--g2)">
+    out += `<div style="display:flex;align-items:center;gap:8px;padding:10px 16px 8px;border-bottom:1px solid var(--g2);background:var(--red2)">
       <span style="font-size:16px;font-weight:700;color:var(--red)">高風險（SWIFT ≥15）</span>
       <span class="chip calert" style="font-size:15px">${high.length} 人</span>
     </div>`;
     out += high.map(ptCard).join('');
   }
   if (low.length) {
-    out += `<div style="display:flex;align-items:center;gap:8px;padding:10px 16px 6px;border-bottom:1px solid var(--g2);${high.length?'border-top:2px solid var(--g2)':''}">
-      <span style="font-size:16px;font-weight:700;color:var(--teal)">低風險（SWIFT &lt;15）</span>
+    out += `<div style="display:flex;align-items:center;gap:8px;padding:10px 16px 8px;border-bottom:1px solid var(--g2);background:var(--green2);${high.length?'border-top:2px solid var(--g2)':''}">
+      <span style="font-size:16px;font-weight:700;color:var(--green)">低風險（SWIFT &lt;15）</span>
       <span class="chip cok" style="font-size:15px">${low.length} 人</span>
     </div>`;
     out += low.map(ptCard).join('');
