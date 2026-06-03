@@ -922,15 +922,15 @@ function renderList(pts) {
 
   if (high.length) {
     out += `<div style="display:flex;align-items:center;gap:8px;padding:10px 16px 6px;border-bottom:1px solid var(--g2)">
-      <span style="font-size:13px;font-weight:700;color:var(--red)">高風險（SWIFT ≥15）</span>
-      <span class="chip calert" style="font-size:12px">${high.length} 人</span>
+      <span style="font-size:16px;font-weight:700;color:var(--red)">高風險（SWIFT ≥15）</span>
+      <span class="chip calert" style="font-size:15px">${high.length} 人</span>
     </div>`;
     out += high.map(ptCard).join('');
   }
   if (low.length) {
     out += `<div style="display:flex;align-items:center;gap:8px;padding:10px 16px 6px;border-bottom:1px solid var(--g2);${high.length?'border-top:2px solid var(--g2)':''}">
-      <span style="font-size:13px;font-weight:700;color:var(--teal)">低風險（SWIFT &lt;15）</span>
-      <span class="chip cok" style="font-size:12px">${low.length} 人</span>
+      <span style="font-size:16px;font-weight:700;color:var(--teal)">低風險（SWIFT &lt;15）</span>
+      <span class="chip cok" style="font-size:15px">${low.length} 人</span>
     </div>`;
     out += low.map(ptCard).join('');
   }
