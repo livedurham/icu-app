@@ -93,17 +93,8 @@ textarea{resize:none}
 .cgray{background:var(--g2);color:var(--g6)}
 .cpurple{background:var(--purple2);color:var(--purple)}
 
-/* ── RAPID ── */
-.ri{display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid var(--g2)}
-.ri:last-child{border-bottom:none}
+/* ── RT SCORE LABEL ── */
 .rl{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:21px;font-weight:800;flex-shrink:0}
-.rtxt{flex:1;min-width:0}
-.rtxt strong{font-size:21px;display:block;font-weight:600}
-.rtxt span{font-size:21px;color:var(--g4)}
-.rbtns{display:flex;gap:5px}
-.rb{width:36px;height:36px;border-radius:8px;border:1.5px solid var(--g2);background:var(--g1);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
-.rb.rp{background:var(--green2);border-color:#86EFAC}
-.rb.rf{background:var(--red2);border-color:#FCA5A5}
 
 /* ── SWIFT ── */
 .swr{display:flex;align-items:center;padding:10px 0;border-bottom:1px solid var(--g2)}
@@ -218,12 +209,90 @@ textarea{resize:none}
     </div>
     <!-- visit timeline status bar -->
     <div class="vtl" id="ov-vtl">
-      <div class="vtlitem" id="vtl-pre"><span class="vt-icon" style="font-size:20px">①</span>轉出前評估</div>
-      <div class="vtlitem" id="vtl-24"><span class="vt-icon" style="font-size:20px">②</span>24hr 訪視</div>
-      <div class="vtlitem" id="vtl-48"><span class="vt-icon" style="font-size:20px">③</span>48hr 訪視</div>
+      <div class="vtlitem" id="vtl-24"><span class="vt-icon" style="font-size:20px">①</span>24hr 訪視</div>
+      <div class="vtlitem" id="vtl-48"><span class="vt-icon" style="font-size:20px">②</span>48hr 訪視</div>
     </div>
     <div class="stitle">基本資料</div>
     <div class="card"><div class="cb" style="padding:10px 16px" id="ov-basic"></div></div>
+
+    <!-- 編輯基本資料（僅 admin 可見，預設隱藏） -->
+    <div id="ov-edit-wrap" style="display:none">
+      <div class="stitle">編輯基本資料</div>
+      <div class="card"><div class="cb">
+        <div class="g2c">
+          <div class="fr"><label class="fl">病人姓名 *</label><input type="text" id="e-name" placeholder="姓名"></div>
+          <div class="fr"><label class="fl">病歷號碼 *</label><input type="text" id="e-mrn" placeholder="8碼" inputmode="numeric" maxlength="8"></div>
+        </div>
+        <div class="g2c">
+          <div class="fr"><label class="fl">床號</label><input type="text" id="e-bed" placeholder="例：5A-01"></div>
+          <div class="fr"><label class="fl">ICU住院天數</label><input type="text" id="e-days" placeholder="天數" inputmode="numeric"></div>
+        </div>
+        <div class="fr"><label class="fl">轉出單位（ICU）</label>
+          <select id="e-unit">
+            <option value="">— 請選擇 —</option>
+            <option value="MICU">MICU 內科加護病房</option>
+            <option value="SICU">SICU 外科加護病房</option>
+            <option value="NRICU">NRICU 神經科加護病房</option>
+            <option value="CCU">CCU 心臟加護病房</option>
+            <option value="其他">其他</option>
+          </select>
+        </div>
+        <div class="fr"><label class="fl">轉出日期 *</label><input type="date" id="e-date"></div>
+        <div class="stitle" style="margin-top:4px">SWIFT Score</div>
+        <div class="swr">
+          <div class="swl">入院來源<small>Admission Source</small></div>
+          <select class="swsel" id="e-sw-src" onchange="calcSwEdit()">
+            <option value="0">急診（0分）</option>
+            <option value="8">一般病房或轉院（8分）</option>
+          </select>
+        </div>
+        <div class="swr">
+          <div class="swl">ICU住院天數<small>Length of Stay</small></div>
+          <select class="swsel" id="e-sw-los" onchange="calcSwEdit()">
+            <option value="0">少於2天（0分）</option>
+            <option value="1">2–10天（1分）</option>
+            <option value="14">超過10天（14分）</option>
+          </select>
+        </div>
+        <div class="swr">
+          <div class="swl">意識狀態 GCS<small>Neurological</small></div>
+          <select class="swsel" id="e-sw-gcs" onchange="calcSwEdit()">
+            <option value="0">GCS &gt;14（0分）</option>
+            <option value="6">GCS 11–14（6分）</option>
+            <option value="14">GCS 8–10（14分）</option>
+            <option value="24">GCS &lt;8（24分）</option>
+          </select>
+        </div>
+        <div class="swr">
+          <div class="swl">氧合能力<small>PaO₂/FiO₂ Ratio</small></div>
+          <select class="swsel" id="e-sw-pf" onchange="calcSwEdit()">
+            <option value="0">&gt;400（0分）</option>
+            <option value="5">150–400（5分）</option>
+            <option value="10">100–150（10分）</option>
+            <option value="13">&lt;100（13分）</option>
+          </select>
+        </div>
+        <div class="swr">
+          <div class="swl">通氣功能<small>Last PaCO₂</small></div>
+          <select class="swsel" id="e-sw-pco2" onchange="calcSwEdit()">
+            <option value="0">&lt;45 mmHg（0分）</option>
+            <option value="5">≥45 mmHg（5分）</option>
+          </select>
+        </div>
+        <div class="swift-box" style="margin-top:8px">
+          <div>
+            <div style="font-size:13px;opacity:.7;margin-bottom:2px">SWIFT 總分</div>
+            <div class="big" id="e-sw-big">0</div>
+          </div>
+          <span class="chip cok" id="e-sw-risk" style="font-size:14px">低風險</span>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:14px">
+          <button class="bp" style="flex:1" onclick="updatePt()">儲存修改</button>
+          <button class="bp" style="flex:0 0 auto;background:var(--g3);color:var(--g6)" onclick="closeEdit()">取消</button>
+        </div>
+      </div></div>
+    </div>
+
     <div class="stitle">24hr RT 訪視</div>
     <div class="card"><div id="ov-v24"></div></div>
     <div class="stitle">48hr RT 訪視</div>
@@ -289,7 +358,7 @@ textarea{resize:none}
               <option value="">— 請選擇 —</option>
               <option value="MICU">MICU 內科加護病房</option>
               <option value="SICU">SICU 外科加護病房</option>
-              <option value="NRICU">NRICU 神經外科加護病房</option>
+              <option value="NRICU">NRICU 神經科加護病房</option>
               <option value="CCU">CCU 心臟加護病房</option>
               <option value="其他">其他</option>
             </select>
@@ -358,15 +427,6 @@ textarea{resize:none}
         </div>
       </div>
 
-      <!-- RAPID-ICU -->
-      <div class="card">
-        <div class="ch">
-          <span class="ct">RAPID-ICU 轉出前評估</span>
-          <span class="chip cnavy" id="rc">0/5</span>
-        </div>
-        <div id="rapid-add"></div>
-      </div>
-
       <button class="bp" onclick="savePt()">儲存病人資料</button>
     </div>
 
@@ -388,16 +448,6 @@ textarea{resize:none}
           <div class="ir"><span class="k">胸腔科會診</span><span class="v" id="di-con">—</span></div>
         </div>
       </div>
-      <div class="card">
-        <div class="ch"><span class="ct">RAPID-ICU 通過率</span></div>
-        <div class="cb">
-          <div class="ir"><span class="k">R — 呼吸頻率</span><span class="v" id="dr-R">—</span></div><div class="dv"></div>
-          <div class="ir"><span class="k">A — 呼吸道保護</span><span class="v" id="dr-A">—</span></div><div class="dv"></div>
-          <div class="ir"><span class="k">P — 脫管穩定</span><span class="v" id="dr-P">—</span></div><div class="dv"></div>
-          <div class="ir"><span class="k">I — 氧氣需求</span><span class="v" id="dr-I">—</span></div><div class="dv"></div>
-          <div class="ir"><span class="k">D — 分泌物</span><span class="v" id="dr-D">—</span></div>
-        </div>
-      </div>
     </div>
 
     <!-- PAGE: EXPORT -->
@@ -410,7 +460,7 @@ textarea{resize:none}
               <option value="">全部單位</option>
               <option value="MICU">MICU 內科加護病房</option>
               <option value="SICU">SICU 外科加護病房</option>
-              <option value="NRICU">NRICU 神經外科加護病房</option>
+              <option value="NRICU">NRICU 神經科加護病房</option>
               <option value="CCU">CCU 心臟加護病房</option>
               <option value="其他">其他</option>
             </select>
@@ -510,16 +560,6 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 let CU      = null;   // current user profile
 let ovPtId  = null;
 let listTab = 'pending'; // 'pending' | 'done'
-const rapidAdd = {R:null,A:null,P:null,I:null,D:null};
-
-// ── RAPID-ICU 轉出前評估（pass/fail）────────────────────────────────
-const RAPID_DEF = [
-  {k:'R',l:'呼吸頻率',    s:'12–20次/分，無輔助肌', bg:'#D4F0EB',cl:'#0E7C6A'},
-  {k:'A',l:'呼吸道保護',  s:'嗆咳正常，可自清分泌物',bg:'#D6E8F7',cl:'#0B3D6B'},
-  {k:'P',l:'脫管穩定度',  s:'脫離呼吸器 ≥24hr',    bg:'#EDE9FE',cl:'#5B21B6'},
-  {k:'I',l:'氧氣需求',    s:'SpO₂≥94%（低流量/RA）',bg:'#FEF3C7',cl:'#92400E'},
-  {k:'D',l:'分泌物減少',  s:'抽痰間隔 ≥4小時',     bg:'#DCFCE7',cl:'#166534'},
-];
 
 // ── RT Assessment Tool (5項，每項0-4分，總分0-20) ──────────────────
 const RT_ITEMS = [
@@ -542,8 +582,6 @@ const INT_DEF = [
   {k:'int_consult', l:'胸腔科會診'},
 ];
 // score state: null = unanswered, 0-4 = score
-const rtScoreAdd = {ph:null,bs:null,rr:null,cg:null,ox:null}; // for pre-discharge RAPID (not used in savePt)
-const rtVisitAdd = {ph:null,bs:null,rr:null,cg:null,ox:null};
 const rtScoreV   = {'24h':{ph:null,bs:null,rr:null,cg:null,ox:null},
                     '48h':{ph:null,bs:null,rr:null,cg:null,ox:null}};
 
@@ -608,7 +646,6 @@ function showApp() {
   appEl.style.cssText = 'display:flex;flex-direction:column;height:100%';
   document.getElementById('tb-user').textContent = CU.name + '（' + roleL(CU.role) + '）';
   document.getElementById('t-admin').style.display = CU.role==='admin' ? 'flex' : 'none';
-  buildRapidUI('rapid-add', rapidAdd, 'a');
   document.getElementById('a-date').value = today();
   go('list');
   startIdleWatch();
@@ -712,20 +749,8 @@ function go(p) {
 function tbAction() { document.getElementById('tb-action').onclick(); }
 
 // ══════════════════════════════════════════════════════════
-// RAPID UI
+// RT ASSESSMENT UI
 // ══════════════════════════════════════════════════════════
-function buildRapidUI(cid, state, prefix) {
-  document.getElementById(cid).innerHTML = RAPID_DEF.map(d => `
-    <div class="ri">
-      <div class="rl" style="background:${d.bg};color:${d.cl}">${d.k}</div>
-      <div class="rtxt"><strong>${d.l}</strong><span>${d.s}</span></div>
-      <div class="rbtns">
-        <button class="rb" id="${prefix}${d.k}p" onclick="setR('${prefix}','${d.k}','pass')">✓</button>
-        <button class="rb" id="${prefix}${d.k}f" onclick="setR('${prefix}','${d.k}','fail')">✗</button>
-      </div>
-    </div>`).join('');
-}
-
 function buildRTUI(cid, scores, prefix) {
   document.getElementById(cid).innerHTML = RT_ITEMS.map(d => `
     <div style="display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--g2)">
@@ -741,30 +766,9 @@ function buildRTUI(cid, scores, prefix) {
     </div>`).join('');
 }
 
-function setR(prefix, k, v) {
-  rapidAdd[k] = v;
-  const bp = document.getElementById(prefix+k+'p');
-  const bf = document.getElementById(prefix+k+'f');
-  if (bp) bp.className = 'rb' + (v==='pass'?' rp':'');
-  if (bf) bf.className = 'rb' + (v==='fail'?' rf':'');
-  updateRapidVerdict();
-}
-
-function updateRapidVerdict() {
-  const vals = Object.values(rapidAdd);
-  const answered = vals.filter(x=>x).length;
-  const chip = document.getElementById('rc');
-  if (answered < 5) {
-    chip.className='chip cnavy'; chip.textContent=answered+'/5';
-    return;
-  }
-  const allPass = vals.every(v=>v==='pass');
-  chip.className = 'chip '+(allPass?'cok':'calert');
-  chip.textContent = allPass?'✓ 可轉出':'⚠ 建議暫緩轉出';
-}
 
 function setScore(prefix, k, score) {
-  const st = prefix==='a' ? rtScoreAdd : rtScoreV[prefix==='v24'?'24h':'48h'];
+  const st = rtScoreV[prefix==='v24'?'24h':'48h'];
   st[k] = score;
   // highlight select
   const sel = document.getElementById(`${prefix}-${k}-sel`);
@@ -806,18 +810,6 @@ function rtRiskDetail(total) {
   </div>`;
 }
 
-function updateRTVerdict() {
-  const total = rtTotal(rtScoreAdd);
-  const chip  = document.getElementById('rc');
-  if (total===null) {
-    const answered = Object.values(rtScoreAdd).filter(v=>v!==null).length;
-    chip.className='chip cnavy'; chip.textContent=answered+'/5 項';
-    return;
-  }
-  const risk = rtRisk(total);
-  chip.className='chip '+risk.cls;
-  chip.textContent='總分 '+total+' — '+risk.label.split('）')[0]+'）';
-}
 
 // ══════════════════════════════════════════════════════════
 // SWIFT
@@ -850,8 +842,6 @@ async function savePt() {
     icu_days:      parseInt(document.getElementById('a-days').value) || null,
     swift_source: sw('sw-src'), swift_los: sw('sw-los'), swift_gcs: sw('sw-gcs'),
     swift_pf:     sw('sw-pf'),  swift_pco2: sw('sw-pco2'),
-    rapid_r: rapidAdd.R, rapid_a: rapidAdd.A, rapid_p: rapidAdd.P,
-    rapid_i: rapidAdd.I, rapid_d: rapidAdd.D,
     created_by: CU.id,
   });
   if (error) { toast('儲存失敗：'+error.message); return; }
@@ -864,10 +854,6 @@ function resetAdd() {
   document.getElementById('a-date').value = today();
   ['sw-src','sw-los','sw-gcs','sw-pf','sw-pco2'].forEach(id=>
     document.getElementById(id).selectedIndex=0);
-  Object.keys(rapidAdd).forEach(k=>rapidAdd[k]=null);
-  buildRapidUI('rapid-add', rapidAdd, 'a');
-  document.getElementById('rc').className='chip cnavy';
-  document.getElementById('rc').textContent='0/5';
   calcSw();
 }
 
@@ -983,18 +969,8 @@ async function openPt(id) {
 
   const v24 = visits?.find(v=>v.visit_type==='24h');
   const v48 = visits?.find(v=>v.visit_type==='48h');
-  const allR = ['r','a','p','i','d'].every(k=>p['rapid_'+k]);
-  document.getElementById('vtl-pre').className = 'vtlitem '+(allR?'done':'pending');
   document.getElementById('vtl-24').className  = 'vtlitem '+(v24?'done':'pending');
   document.getElementById('vtl-48').className  = 'vtlitem '+(v48?'done':'');
-
-  const rl = {r:'呼吸頻率',a:'呼吸道保護',p:'脫管穩定',i:'氧氣需求',d:'分泌物'};
-  const rrows = ['r','a','p','i','d'].map(k=>{
-    const v=p['rapid_'+k];
-    return `<div class="ir"><span class="k">${rl[k]}</span>
-      <span class="chip ${v==='pass'?'cok':v==='fail'?'calert':'cgray'}" style="font-size:20px">
-        ${v==='pass'?'✓ 通過':v==='fail'?'✗ 未達標':'未填'}</span></div>`;
-  }).join('<div class="dv"></div>');
 
   document.getElementById('ov-basic').innerHTML=`
     <div class="ir"><span class="k">病歷號碼</span><span class="v">${p.mrn}</span></div><div class="dv"></div>
@@ -1003,22 +979,20 @@ async function openPt(id) {
     <div class="ir"><span class="k">ICU 住院天數</span><span class="v">${p.icu_days||'—'} 天</span></div><div class="dv"></div>
     <div class="ir"><span class="k">SWIFT Score</span><span class="v">${p.swift_total} 分
       <span class="chip ${parseInt(p.swift_total)>=15?'calert':'cok'}" style="font-size:20px">
-        ${parseInt(p.swift_total)>=15?'高風險':'低風險'}</span></span></div>
-    <div class="dv"></div>
-    <div style="font-size:14px;font-weight:700;color:var(--g4);margin:8px 0 4px;letter-spacing:.06em">RAPID-ICU 轉出前評估</div>
-    ${rrows}`;
+        ${parseInt(p.swift_total)>=15?'高風險':'低風險'}</span></span></div>`;
 
   document.getElementById('ov-v24').innerHTML = renderVisit('24h',v24,true);
   if (!v24) setTimeout(()=>initRTForm('24h'),0);
   document.getElementById('ov-v48').innerHTML = renderVisit('48h',v48,!!v24);
   if (!v48 && v24) setTimeout(()=>initRTForm('48h'),0);
   document.getElementById('ov-del').innerHTML = CU.role==='admin'
-    ? `<button class="bdanger" style="width:100%" onclick="delPt('${id}')">刪除此病人記錄</button>`:'' ;
+    ? `<div style="display:flex;gap:8px">
+         <button class="bsm" style="flex:1" onclick="openEdit()">編輯基本資料</button>
+         <button class="bdanger" style="flex:1" onclick="delPt('${id}')">刪除記錄</button>
+       </div>` : '';
 
   document.getElementById('ov-pt').classList.add('open');
   document.body.style.overflow='hidden';
-  rapidV['24h']={R:null,A:null,P:null,I:null,D:null};
-  rapidV['48h']={R:null,A:null,P:null,I:null,D:null};
 }
 
 function renderVisit(type, visit, prevDone) {
@@ -1026,7 +1000,7 @@ function renderVisit(type, visit, prevDone) {
     const il={int_pt:'胸腔物理治療',int_neb:'噴霧治療',int_suction:'抽痰',
               int_o2:'氧氣調整',int_consult:'胸腔科會診'};
     const ints=Object.keys(il).filter(k=>visit[k]).map(k=>il[k]).join('、');
-    // scores stored in rapid_r/a/p/i/d as 0-4 integers
+    // RT scores stored as 0-4 integers per item
     const scores = {ph:visit.rt_ph, bs:visit.rt_bs, rr:visit.rt_rr,
                     cg:visit.rt_cg, ox:visit.rt_ox};
     const total = Object.values(scores).every(v=>v!==null&&v!==undefined)
@@ -1122,6 +1096,66 @@ async function delPt(id) {
   await sb.from('patients').update({status:'deleted'}).eq('id',id);
   closeOv(); toast('記錄已刪除'); loadList();
 }
+
+function openEdit() {
+  // 從目前顯示的基本資料反填欄位
+  sb.from('patients').select('*').eq('id',ovPtId).single().then(({data:p})=>{
+    if (!p) return;
+    document.getElementById('e-name').value  = p.name||'';
+    document.getElementById('e-mrn').value   = p.mrn||'';
+    document.getElementById('e-bed').value   = p.bed||'';
+    document.getElementById('e-days').value  = p.icu_days||'';
+    document.getElementById('e-unit').value  = p.transfer_unit||'';
+    document.getElementById('e-date').value  = p.transfer_date||'';
+    // SWIFT selects — match by value
+    ['e-sw-src','e-sw-los','e-sw-gcs','e-sw-pf','e-sw-pco2'].forEach((sid,i)=>{
+      const keys=['swift_source','swift_los','swift_gcs','swift_pf','swift_pco2'];
+      const sel=document.getElementById(sid);
+      for (let o of sel.options) {
+        if (parseInt(o.value)===parseInt(p[keys[i]])) { sel.value=o.value; break; }
+      }
+    });
+    calcSwEdit();
+    document.getElementById('ov-edit-wrap').style.display='block';
+    document.getElementById('ov-edit-wrap').scrollIntoView({behavior:'smooth'});
+  });
+}
+
+function closeEdit() {
+  document.getElementById('ov-edit-wrap').style.display='none';
+}
+
+function calcSwEdit() {
+  const s = ['e-sw-src','e-sw-los','e-sw-gcs','e-sw-pf','e-sw-pco2']
+    .reduce((a,id)=>a+parseInt(document.getElementById(id).value),0);
+  document.getElementById('e-sw-big').textContent = s;
+  const r = document.getElementById('e-sw-risk');
+  r.className   = 'chip '+(s>=15?'calert':'cok');
+  r.textContent = s>=15 ? '⚠ 高風險（≥15）' : '低風險';
+}
+
+async function updatePt() {
+  const name = document.getElementById('e-name').value.trim();
+  const mrn  = document.getElementById('e-mrn').value.trim();
+  const date = document.getElementById('e-date').value;
+  if (!name||!mrn||!date) { toast('請填寫姓名、病歷號碼、轉出日期'); return; }
+  if (!/^[0-9]{8}$/.test(mrn)) { toast('病歷號碼須為 8 碼數字'); return; }
+  const sw = id => parseInt(document.getElementById(id).value);
+  const { error } = await sb.from('patients').update({
+    name, mrn,
+    bed:           document.getElementById('e-bed').value.trim()||null,
+    transfer_unit: document.getElementById('e-unit').value||null,
+    transfer_date: date,
+    icu_days:      parseInt(document.getElementById('e-days').value)||null,
+    swift_source: sw('e-sw-src'), swift_los: sw('e-sw-los'), swift_gcs: sw('e-sw-gcs'),
+    swift_pf:     sw('e-sw-pf'),  swift_pco2: sw('e-sw-pco2'),
+  }).eq('id', ovPtId);
+  if (error) { toast('儲存失敗：'+error.message); return; }
+  toast('基本資料已更新');
+  closeEdit();
+  openPt(ovPtId);
+  loadList();
+}
 function closeOv() {
   document.getElementById('ov-pt').classList.remove('open');
   document.body.style.overflow='';
@@ -1150,13 +1184,6 @@ async function loadDash() {
   document.getElementById('di-o2').textContent   = ic.int_o2;
   document.getElementById('di-con').textContent  = ic.int_consult;
 
-  ['R','A','P','I','D'].forEach(k=>{
-    const key='rapid_'+k.toLowerCase();
-    const total=pts.filter(p=>p[key]).length;
-    const pass=pts.filter(p=>p[key]==='pass').length;
-    document.getElementById('dr-'+k).textContent =
-      total ? pass+'/'+total+' ('+Math.round(pass/total*100)+'%)':'—';
-  });
 }
 
 // ══════════════════════════════════════════════════════════
@@ -1193,18 +1220,15 @@ async function updateExCount() {
 async function exportCSV() {
   const rows=await getExportData();
   if (!rows.length) { toast('沒有符合條件的資料'); return; }
-  const rapidL=v=>v==='pass'?'通過':v==='fail'?'未達標':'未填';
   const rtL=v=>(v===null||v===undefined||v==='')?'':String(v);
-  const rtTotal2=(ph,bs,rr,cg,ox)=>{ const vals=[ph,bs,rr,cg,ox]; if(vals.some(v=>v===null||v===undefined||v==='')) return ''; return vals.reduce((a,b)=>a+Number(b),0); };
   const iL=(row,p)=>{
     const m={[p+'_pt']:'胸腔物理治療',[p+'_neb']:'噴霧治療',
              [p+'_suction']:'抽痰',[p+'_o2']:'氧氣調整',[p+'_consult']:'胸腔科會診'};
     return Object.keys(m).filter(k=>row[k]).map(k=>m[k]).join('；');
   };
   const headers=[
-    '病歷號碼','病人姓名','轉入床號','轉出單位','轉出日期','ICU住院天數',
+    '病歷號碼','病人姓名','床號','轉出單位','轉出日期','ICU住院天數',
     'SWIFT總分','SWIFT風險',
-    'RAPID-R呼吸頻率','RAPID-A呼吸道保護','RAPID-P脫管穩定','RAPID-I氧氣需求','RAPID-D分泌物',
     '24hr訪視時間','24hr訪視者',
     '24hr-肺部疾病史','24hr-呼吸音','24hr-呼吸次數','24hr-咳嗽能力','24hr-氧氣需求','24hr-RT總分',
     '24hr介入措施','24hr備註',
@@ -1215,14 +1239,13 @@ async function exportCSV() {
   const data=rows.map(p=>[
     p.mrn,p.name,p.bed||'',p.transfer_unit||'',p.transfer_date,p.icu_days||'',
     p.swift_total,parseInt(p.swift_total||0)>=15?'高風險':'低風險',
-    rapidL(p.rapid_r),rapidL(p.rapid_a),rapidL(p.rapid_p),rapidL(p.rapid_i),rapidL(p.rapid_d),
     p.v24_time||'',p.v24_by||'',
-    rtL(p.v24_ph,'ph'),rtL(p.v24_bs,'bs'),rtL(p.v24_rr,'rr'),rtL(p.v24_cg,'cg'),rtL(p.v24_ox,'ox'),
-    rtTotal2(p.v24_ph,p.v24_bs,p.v24_rr,p.v24_cg,p.v24_ox),
+    rtL(p.v24_ph),rtL(p.v24_bs),rtL(p.v24_rr),rtL(p.v24_cg),rtL(p.v24_ox),
+    rtL(p.v24_total),
     iL(p,'v24'),p.v24_note||'',
     p.v48_time||'',p.v48_by||'',
-    rtL(p.v48_ph,'ph'),rtL(p.v48_bs,'bs'),rtL(p.v48_rr,'rr'),rtL(p.v48_cg,'cg'),rtL(p.v48_ox,'ox'),
-    rtTotal2(p.v48_ph,p.v48_bs,p.v48_rr,p.v48_cg,p.v48_ox),
+    rtL(p.v48_ph),rtL(p.v48_bs),rtL(p.v48_rr),rtL(p.v48_cg),rtL(p.v48_ox),
+    rtL(p.v48_total),
     iL(p,'v48'),p.v48_note||'',
     p.created_by_name||'',p.created_at?new Date(p.created_at).toLocaleString('zh-TW'):'',
   ]);
