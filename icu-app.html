@@ -209,7 +209,7 @@ textarea{resize:none}
     </div>
     <!-- visit timeline status bar -->
     <div class="vtl" id="ov-vtl">
-      <div class="vtlitem" id="vtl-24"><span class="vt-icon" style="font-size:20px">①</span>24hr 訪視</div>
+      <div class="vtlitem" id="vtl-24"><span class="vt-icon" style="font-size:20px">①</span><span id="vtl-24-txt">24hr 訪視</span></div>
       <div class="vtlitem" id="vtl-48"><span class="vt-icon" style="font-size:20px">②</span>48hr 訪視</div>
     </div>
     <div class="stitle">基本資料</div>
@@ -293,10 +293,10 @@ textarea{resize:none}
       </div></div>
     </div>
 
-    <div class="stitle">24小時訪視</div>
+    <div class="stitle" id="stitle-v24">24小時訪視</div>
     <div class="card"><div id="ov-v24"></div></div>
-    <div class="stitle">48小時訪視</div>
-    <div class="card"><div id="ov-v48"></div></div>
+    <div class="stitle" id="stitle-v48">48小時訪視</div>
+    <div class="card" id="card-v48"><div id="ov-v48"></div></div>
     <div style="height:12px"></div>
     <div id="ov-del"></div>
   </div>
@@ -435,8 +435,8 @@ textarea{resize:none}
       <div class="sgrid">
         <div class="scard"><div class="snum" id="d-total">—</div><div class="slbl">追蹤中病人</div></div>
         <div class="scard"><div class="snum" id="d-swift">—</div><div class="slbl">高風險（SWIFT≥15）</div></div>
-        <div class="scard"><div class="snum" id="d-24h">—</div><div class="slbl">24hr訪視完成率</div></div>
-        <div class="scard"><div class="snum" id="d-48h">—</div><div class="slbl">48hr訪視完成率</div></div>
+        <div class="scard"><div class="snum" id="d-24h">—</div><div class="slbl">首次評估完成率</div></div>
+        <div class="scard"><div class="snum" id="d-48h">—</div><div class="slbl">高風險48hr完成率</div></div>
       </div>
       <div class="card">
         <div class="ch"><span class="ct">介入措施統計</span></div>
@@ -883,9 +883,11 @@ function switchListTab(tab) {
 
 function renderList(pts) {
   const c = document.getElementById('pt-list');
+  // 低風險（SWIFT<15）只需完成一次電子病歷評估（v24），高風險需完成兩次（v48）
+  const isDone = p => parseInt(p.swift_total||0) >= 15 ? !!p.v48_id : !!p.v24_id;
   const filtered = listTab==='pending'
-    ? pts.filter(p=>!p.v48_id)
-    : pts.filter(p=>!!p.v48_id);
+    ? pts.filter(p=>!isDone(p))
+    : pts.filter(p=>isDone(p));
 
   if (!filtered.length) {
     const msg = listTab==='pending' ? '目前無待訪視病人' : '目前無已完成病人';
@@ -896,11 +898,15 @@ function renderList(pts) {
   function ptCard(p) {
     const isHigh = parseInt(p.swift_total||0)>=15;
     const hasInt = parseInt(p.intervention_count||0)>0;
-    const done48 = !!p.v48_id, done24 = !!p.v24_id;
-    const dot = hasInt?'dalert':done48?'dok':'dpend';
-    const cc  = hasInt?'calert':done48?'cok':'cpend';
-    const ct  = hasInt?'需介入':done48?'已完成':'待追蹤';
-    const vis = done48?'追蹤完成 ✓':done24?'48hr 待訪視':'24hr 待訪視';
+    const done24 = !!p.v24_id;
+    const done48 = !!p.v48_id;
+    const done   = isHigh ? done48 : done24;
+    const dot = hasInt?'dalert':done?'dok':'dpend';
+    const cc  = hasInt?'calert':done?'cok':'cpend';
+    const ct  = hasInt?'需介入':done?'已完成':'待追蹤';
+    const vis = isHigh
+      ? (done48?'追蹤完成 ✓':done24?'48hr 待訪視':'24hr 待訪視')
+      : (done24?'電子病歷評估完成 ✓':'待電子病歷評估');
     const avBg = isHigh?'':'style="background:var(--teal)"';
     const sc   = isHigh?'calert':'cok';
     return `<div class="ptr" onclick="openPt('${p.id}')">
@@ -947,8 +953,9 @@ async function loadList() {
     .order('transfer_date', {ascending:false});
   if (error) { toast('載入失敗：'+error.message); return; }
   window._cachedPts = pts || [];
-  const pending = (pts||[]).filter(p=>!p.v48_id);
-  const done    = (pts||[]).filter(p=>!!p.v48_id);
+  const isDone = p => parseInt(p.swift_total||0) >= 15 ? !!p.v48_id : !!p.v24_id;
+  const pending = (pts||[]).filter(p=>!isDone(p));
+  const done    = (pts||[]).filter(p=>isDone(p));
   document.getElementById('lt-pending-count').textContent = pending.length;
   document.getElementById('lt-done-count').textContent    = done.length;
   renderList(window._cachedPts);
@@ -968,10 +975,18 @@ async function openPt(id) {
   document.getElementById('ov-sub').textContent =
     maskMrn(p.mrn)+' · '+(p.bed||'—')+' · 轉出 '+p.transfer_date;
 
+  const isHighRisk = parseInt(p.swift_total) >= 15;
   const v24 = visits?.find(v=>v.visit_type==='24h');
   const v48 = visits?.find(v=>v.visit_type==='48h');
-  document.getElementById('vtl-24').className  = 'vtlitem '+(v24?'done':'pending');
-  document.getElementById('vtl-48').className  = 'vtlitem '+(v48?'done':'');
+
+  // 時間軸：低風險只顯示一次訪視
+  document.getElementById('vtl-24').className = 'vtlitem '+(v24?'done':'pending');
+  document.getElementById('vtl-24-txt').textContent =
+    isHighRisk ? '24hr 訪視' : '電子病歷評估';
+  document.getElementById('vtl-48').style.display = isHighRisk ? '' : 'none';
+  if (isHighRisk) {
+    document.getElementById('vtl-48').className = 'vtlitem '+(v48?'done':'');
+  }
 
   document.getElementById('ov-basic').innerHTML=`
     <div class="ir"><span class="k">病歷號碼</span><span class="v">${maskMrn(p.mrn)}</span></div><div class="dv"></div>
@@ -982,10 +997,19 @@ async function openPt(id) {
       <span class="chip ${parseInt(p.swift_total)>=15?'calert':'cok'}" style="font-size:20px">
         ${parseInt(p.swift_total)>=15?'高風險':'低風險'}</span></span></div>`;
 
-  document.getElementById('ov-v24').innerHTML = renderVisit('24h',v24,true);
-  if (!v24) setTimeout(()=>initRTForm('24h'),0);
-  document.getElementById('ov-v48').innerHTML = renderVisit('48h',v48,!!v24);
-  if (!v48 && v24) setTimeout(()=>initRTForm('48h'),0);
+  // 低風險：只顯示一次電子病歷評估；高風險：24hr + 48hr
+  document.getElementById('stitle-v48').style.display = isHighRisk ? '' : 'none';
+  document.getElementById('card-v48').style.display   = isHighRisk ? '' : 'none';
+  document.getElementById('stitle-v24').textContent   = isHighRisk ? '24小時訪視' : '電子病歷評估';
+
+  if (isHighRisk) {
+    document.getElementById('ov-v24').innerHTML = renderVisit('24h', v24, true);
+    if (!v24) setTimeout(()=>initRTForm('24h'),0);
+    document.getElementById('ov-v48').innerHTML = renderVisit('48h', v48, !!v24);
+    if (!v48 && v24) setTimeout(()=>initRTForm('48h'),0);
+  } else {
+    document.getElementById('ov-v24').innerHTML = renderVisitLow(v24);
+  }
   document.getElementById('ov-del').innerHTML = CU.role==='admin'
     ? `<div style="display:flex;gap:8px">
          <button class="bsm" style="flex:1" onclick="openEdit()">編輯基本資料</button>
@@ -1059,9 +1083,48 @@ function renderVisit(type, visit, prevDone) {
 }
 
 function initRTForm(type) {
-  const prefix = type==='24h'?'v24':'v48';
   const scores = rtScoreV[type];
-  buildRTUI('rt-form-'+type, scores, prefix);
+  buildRTUI('rt-form-'+type, scores, type==='24h'?'v24':'v48');
+}
+
+// ── 低風險病人：簡易電子病歷評估 ──────────────────────────────────
+function renderVisitLow(visit) {
+  if (visit) {
+    return `<div class="cb" style="padding:12px 16px">
+      <div class="ir"><span class="k">訪視時間</span><span class="v">${visit.visited_time||'—'}</span></div><div class="dv"></div>
+      <div class="ir"><span class="k">訪視者</span><span class="v">${visit.rt_name||'—'}</span></div>
+      ${visit.notes?`<div class="dv"></div><div style="font-size:13px;color:var(--g4);margin-top:6px">電子病歷評估備註</div>
+      <div style="font-size:14px;margin-top:4px;line-height:1.6">${visit.notes}</div>`:''}
+    </div>`;
+  }
+  const now = new Date().toLocaleString('zh-TW',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+  return `<div>
+    <div style="padding:12px 16px;border-bottom:1px solid var(--g2)">
+      <div class="fr"><label class="fl">訪視時間</label><input type="text" id="vt-low" value="${now}"></div>
+    </div>
+    <div style="padding:12px 16px">
+      <div class="fr"><label class="fl">電子病歷評估備註</label>
+        <textarea id="vn-low" rows="5" placeholder="請輸入電子病歷評估內容…"></textarea>
+      </div>
+      <button class="bp" onclick="saveVisitLow()">儲存評估記錄</button>
+    </div>
+  </div>`;
+}
+
+async function saveVisitLow() {
+  const notes = document.getElementById('vn-low')?.value?.trim();
+  const time  = document.getElementById('vt-low')?.value||null;
+  if (!notes) { toast('請填寫電子病歷評估備註'); return; }
+  const { error } = await sb.from('visits').upsert({
+    patient_id:   ovPtId,
+    visit_type:   '24h',
+    notes,
+    visited_time: time,
+    visited_by:   CU.id,
+  }, { onConflict: 'patient_id,visit_type' });
+  if (error) { toast('儲存失敗：'+error.message); return; }
+  toast('評估記錄已儲存');
+  openPt(ovPtId); loadList();
 }
 
 async function saveVisit(type) {
@@ -1171,10 +1234,11 @@ async function loadDash() {
   const n = pts.length;
   document.getElementById('d-total').textContent = n;
   document.getElementById('d-swift').textContent = pts.filter(p=>parseInt(p.swift_total||0)>=15).length;
-  const d24 = pts.filter(p=>p.v24_id).length;
-  const d48 = pts.filter(p=>p.v48_id).length;
+  const d24   = pts.filter(p=>p.v24_id).length;
+  const high  = pts.filter(p=>parseInt(p.swift_total||0)>=15);
+  const d48   = high.filter(p=>p.v48_id).length;
   document.getElementById('d-24h').textContent = n ? Math.round(d24/n*100)+'%':'—';
-  document.getElementById('d-48h').textContent = n ? Math.round(d48/n*100)+'%':'—';
+  document.getElementById('d-48h').textContent = high.length ? Math.round(d48/high.length*100)+'%':'—';
 
   const { data: vis } = await sb.from('visits').select('*');
   const ic={int_pt:0,int_neb:0,int_suction:0,int_o2:0,int_consult:0};
