@@ -272,6 +272,33 @@ textarea{resize:none}
             <option value="13">&lt;100（13分）</option>
           </select>
         </div>
+        <!-- S/F → P/F 計算機 -->
+        <div style="background:var(--navy3);border-radius:10px;padding:12px 14px;margin:4px 0 8px">
+          <div style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:6px">
+            🧮 沒有ABG data？改用 SpO₂/FiO₂ 換算 P/F
+          </div>
+          <div style="font-size:11px;color:var(--g4);margin-bottom:8px;line-height:1.5">
+            公式：P/F = (S/F − 64) / 0.84
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <div style="flex:1;min-width:80px">
+              <div style="font-size:11px;color:var(--g4);margin-bottom:3px">SpO₂ (%)</div>
+              <input type="number" id="e-sf-spo2" min="1" max="100" placeholder="例：95"
+                style="width:100%;padding:8px 10px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px;font-family:inherit"
+                oninput="calcSFEdit()">
+            </div>
+            <div style="flex:1;min-width:80px">
+              <div style="font-size:11px;color:var(--g4);margin-bottom:3px">FiO₂ (0.21–1.0)</div>
+              <input type="number" id="e-sf-fio2" min="0.21" max="1" step="0.01" placeholder="例：0.4"
+                style="width:100%;padding:8px 10px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px;font-family:inherit"
+                oninput="calcSFEdit()">
+            </div>
+            <div style="flex:0 0 auto;text-align:center;padding-top:14px">
+              <div style="font-size:11px;color:var(--g4);margin-bottom:3px">換算 P/F</div>
+              <div id="e-sf-result" style="font-size:20px;font-weight:800;color:var(--navy)">—</div>
+            </div>
+          </div>
+        </div>
         <div class="swr">
           <div class="swl">通氣功能<small>Last PaCO₂</small></div>
           <select class="swsel" id="e-sw-pco2" onchange="calcSwEdit()">
@@ -406,6 +433,33 @@ textarea{resize:none}
               <option value="10">100–150（10分）</option>
               <option value="13">&lt;100（13分）</option>
             </select>
+          </div>
+          <!-- S/F → P/F 計算機 -->
+          <div style="background:var(--navy3);border-radius:10px;padding:12px 14px;margin:4px 0 8px">
+            <div style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:6px">
+              🧮 沒有ABG data？改用 SpO₂/FiO₂ 換算 P/F
+            </div>
+            <div style="font-size:11px;color:var(--g4);margin-bottom:8px;line-height:1.5">
+              公式：P/F = (S/F − 64) / 0.84
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <div style="flex:1;min-width:80px">
+                <div style="font-size:11px;color:var(--g4);margin-bottom:3px">SpO₂ (%)</div>
+                <input type="number" id="sf-spo2" min="1" max="100" placeholder="例：95"
+                  style="width:100%;padding:8px 10px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px;font-family:inherit"
+                  oninput="calcSF()">
+              </div>
+              <div style="flex:1;min-width:80px">
+                <div style="font-size:11px;color:var(--g4);margin-bottom:3px">FiO₂ (0.21–1.0)</div>
+                <input type="number" id="sf-fio2" min="0.21" max="1" step="0.01" placeholder="例：0.4"
+                  style="width:100%;padding:8px 10px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px;font-family:inherit"
+                  oninput="calcSF()">
+              </div>
+              <div style="flex:0 0 auto;text-align:center;padding-top:14px">
+                <div style="font-size:11px;color:var(--g4);margin-bottom:3px">換算 P/F</div>
+                <div id="sf-result" style="font-size:20px;font-weight:800;color:var(--navy)">—</div>
+              </div>
+            </div>
           </div>
           <div class="swr">
             <div class="swl">通氣功能<small>Last PaCO₂</small></div>
@@ -823,6 +877,45 @@ function calcSw() {
   const r = document.getElementById('sw-risk');
   r.className   = 'chip '+(s>=15?'calert':'cok');
   r.textContent = s>=15 ? '⚠ 高風險（≥15）' : '低風險';
+}
+
+// S/F → P/F 換算，並自動選取對應 P/F 區間（新增頁）
+function calcSF() {
+  const spo2 = parseFloat(document.getElementById('sf-spo2').value);
+  const fio2 = parseFloat(document.getElementById('sf-fio2').value);
+  const el   = document.getElementById('sf-result');
+  if (!spo2 || !fio2 || fio2 <= 0) { el.textContent = '—'; el.style.color='var(--navy)'; return; }
+  const sf = spo2 / fio2;
+  const pf = Math.round((sf - 64) / 0.84);
+  el.textContent = pf > 0 ? pf : '—';
+  if (pf <= 0) { el.style.color='var(--g4)'; return; }
+  // 自動選取對應 P/F 分段
+  const sel = document.getElementById('sw-pf');
+  if      (pf > 400)             sel.value = '0';
+  else if (pf >= 150 && pf <= 400) sel.value = '5';
+  else if (pf >= 100 && pf < 150)  sel.value = '10';
+  else                              sel.value = '13';
+  el.style.color = pf < 100 ? 'var(--red)' : pf < 150 ? 'var(--amber)' : 'var(--green)';
+  calcSw();
+}
+
+// S/F → P/F 換算（編輯頁）
+function calcSFEdit() {
+  const spo2 = parseFloat(document.getElementById('e-sf-spo2').value);
+  const fio2 = parseFloat(document.getElementById('e-sf-fio2').value);
+  const el   = document.getElementById('e-sf-result');
+  if (!spo2 || !fio2 || fio2 <= 0) { el.textContent = '—'; el.style.color='var(--navy)'; return; }
+  const sf = spo2 / fio2;
+  const pf = Math.round((sf - 64) / 0.84);
+  el.textContent = pf > 0 ? pf : '—';
+  if (pf <= 0) { el.style.color='var(--g4)'; return; }
+  const sel = document.getElementById('e-sw-pf');
+  if      (pf > 400)               sel.value = '0';
+  else if (pf >= 150 && pf <= 400) sel.value = '5';
+  else if (pf >= 100 && pf < 150)  sel.value = '10';
+  else                              sel.value = '13';
+  el.style.color = pf < 100 ? 'var(--red)' : pf < 150 ? 'var(--amber)' : 'var(--green)';
+  calcSwEdit();
 }
 
 // ══════════════════════════════════════════════════════════
