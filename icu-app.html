@@ -696,6 +696,7 @@ async function logout() {
 
 function roleL(r) { return {admin:'管理員',rt:'RT',nurse:'護理師',doctor:'醫師'}[r] || r; }
 function today()  { return new Date().toISOString().split('T')[0]; }
+const maskMrn = mrn => mrn ? mrn.slice(0,6)+'xx' : '—';
 
 // ══════════════════════════════════════════════════════════
 // 閒置自動登出（15分鐘）
@@ -909,7 +910,7 @@ function renderList(pts) {
           <span class="chip ${cc}" style="font-size:13px">${ct}</span>
           <span class="chip ${sc}" style="font-size:13px">SWIFT ${p.swift_total||0}</span>
         </div>
-        <div class="ptm">${p.mrn} · ${p.bed||'—'} · ${p.transfer_unit||'—'}</div>
+        <div class="ptm">${maskMrn(p.mrn)} · ${p.bed||'—'} · ${p.transfer_unit||'—'}</div>
         <div class="ptm">轉出：${p.transfer_date} · ${vis}</div>
       </div>
       <div class="sdot ${dot}"></div>
@@ -965,7 +966,7 @@ async function openPt(id) {
 
   document.getElementById('ov-name').textContent = p.name;
   document.getElementById('ov-sub').textContent =
-    p.mrn+' · '+(p.bed||'—')+' · 轉出 '+p.transfer_date;
+    maskMrn(p.mrn)+' · '+(p.bed||'—')+' · 轉出 '+p.transfer_date;
 
   const v24 = visits?.find(v=>v.visit_type==='24h');
   const v48 = visits?.find(v=>v.visit_type==='48h');
@@ -973,7 +974,7 @@ async function openPt(id) {
   document.getElementById('vtl-48').className  = 'vtlitem '+(v48?'done':'');
 
   document.getElementById('ov-basic').innerHTML=`
-    <div class="ir"><span class="k">病歷號碼</span><span class="v">${p.mrn}</span></div><div class="dv"></div>
+    <div class="ir"><span class="k">病歷號碼</span><span class="v">${maskMrn(p.mrn)}</span></div><div class="dv"></div>
     <div class="ir"><span class="k">床號</span><span class="v">${p.bed||'—'}</span></div><div class="dv"></div>
     <div class="ir"><span class="k">轉出單位</span><span class="v">${p.transfer_unit||'—'}</span></div><div class="dv"></div>
     <div class="ir"><span class="k">ICU 住院天數</span><span class="v">${p.icu_days||'—'} 天</span></div><div class="dv"></div>
