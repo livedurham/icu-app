@@ -221,7 +221,7 @@ textarea{resize:none}
       <div class="card"><div class="cb">
         <div class="g2c">
           <div class="fr"><label class="fl">病人姓名 *</label><input type="text" id="e-name" placeholder="姓名"></div>
-          <div class="fr"><label class="fl">病歷號碼 *</label><input type="text" id="e-mrn" placeholder="8碼" inputmode="numeric" maxlength="8"></div>
+          <div class="fr"><label class="fl">病歷號碼 *</label><input type="text" id="e-mrn" placeholder="8碼英數字" maxlength="8"></div>
         </div>
         <div class="g2c">
           <div class="fr"><label class="fl">床號</label><input type="text" id="e-bed" placeholder="例：5A-01"></div>
@@ -347,7 +347,7 @@ textarea{resize:none}
         <div class="cb">
           <div class="g2c">
             <div class="fr"><label class="fl">病人姓名 *</label><input type="text" id="a-name" placeholder="姓名"></div>
-            <div class="fr"><label class="fl">病歷號碼 *</label><input type="text" id="a-mrn" placeholder="8碼" inputmode="numeric" maxlength="8"></div>
+            <div class="fr"><label class="fl">病歷號碼 *</label><input type="text" id="a-mrn" placeholder="8碼英數字" maxlength="8"></div>
           </div>
           <div class="g2c">
             <div class="fr"><label class="fl">床號</label><input type="text" id="a-bed" placeholder="例：5A-01"></div>
@@ -832,7 +832,7 @@ async function savePt() {
   const mrn  = document.getElementById('a-mrn').value.trim();
   const date = document.getElementById('a-date').value;
   if (!name||!mrn||!date) { toast('請填寫姓名、病歷號碼、轉出日期'); return; }
-  if (!/^[0-9]{8}$/.test(mrn)) { toast('病歷號碼須為 8 碼數字'); return; }
+  if (!/^[A-Za-z0-9]{8}$/.test(mrn)) { toast('病歷號碼須為 8 碼英數字'); return; }
   const sw = id => parseInt(document.getElementById(id).value);
   const { error } = await sb.from('patients').insert({
     name, mrn,
@@ -1139,7 +1139,7 @@ async function updatePt() {
   const mrn  = document.getElementById('e-mrn').value.trim();
   const date = document.getElementById('e-date').value;
   if (!name||!mrn||!date) { toast('請填寫姓名、病歷號碼、轉出日期'); return; }
-  if (!/^[0-9]{8}$/.test(mrn)) { toast('病歷號碼須為 8 碼數字'); return; }
+  if (!/^[A-Za-z0-9]{8}$/.test(mrn)) { toast('病歷號碼須為 8 碼英數字'); return; }
   const sw = id => parseInt(document.getElementById(id).value);
   const { error } = await sb.from('patients').update({
     name, mrn,
