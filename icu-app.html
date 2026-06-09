@@ -193,7 +193,7 @@ textarea{resize:none}
     <div class="login-hint">忘記密碼請聯絡管理員</div>
     <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--g2);text-align:center;color:var(--g4);font-size:11px;line-height:1.7">
       <div>Developer　林鎮均</div>
-      <div>Version 1.02　2026-06-04</div>
+      <div>Version 1.03　2026-06-09</div>
     </div>
   </div>
 </div>
@@ -691,13 +691,11 @@ async function init() {
 }
 
 async function loadProfile(uid) {
-  console.log('[loadProfile] uid=', uid);
   const { data, error } = await sb.from('profiles').select('*').eq('id', uid).single();
-  console.log('[loadProfile] data=', data, 'error=', error);
   if (error) {
-    // RLS 或找不到 profile：嘗試用 admin insert 補建
-    console.warn('[loadProfile] profile not found, trying fallback');
-    showErr('找不到使用者資料（' + (error.message||error.code) + '）請聯絡管理員建立 profile');
+    // 沒有 profile：可能是孤兒帳號或被刪除，登出
+    await sb.auth.signOut();
+    showErr('找不到使用者資料，請聯絡管理員');
     return;
   }
   if (data) {
@@ -707,7 +705,6 @@ async function loadProfile(uid) {
       return;
     }
     CU = data;
-    console.log('[loadProfile] CU set:', CU);
   }
 }
 
@@ -716,11 +713,9 @@ function showLogin() {
   document.getElementById('app').style.display = 'none';
 }
 function showApp() {
-  console.log('[showApp] CU=', CU);
   const loginEl = document.getElementById('login-screen');
   const appEl   = document.getElementById('app');
-  console.log('[showApp] login-screen el:', loginEl, 'app el:', appEl);
-  if (!appEl) { console.error('FATAL: #app element not found!'); return; }
+  if (!appEl) return;
   loginEl.style.display = 'none';
   appEl.style.cssText = 'display:flex;flex-direction:column;height:100%';
   document.getElementById('tb-user').textContent = CU.name + '（' + roleL(CU.role) + '）';
@@ -728,7 +723,6 @@ function showApp() {
   document.getElementById('a-date').value = today();
   go('list');
   startIdleWatch();
-  console.log('[showApp] done, app display=', appEl.style.display);
 }
 
 // ══════════════════════════════════════════════════════════
@@ -743,23 +737,15 @@ async function login() {
   btn.textContent = '登入中…'; btn.disabled = true; err.style.display = 'none';
   try {
     const email = eid + '@ms.skh.org.tw';
-    console.log('[login] signing in as:', email);
     const { data, error } = await sb.auth.signInWithPassword({ email, password: pw });
-    console.log('[login] auth result data=', data, 'error=', error);
-    if (error) throw new Error('員工編號或密碼錯誤：' + error.message);
+    if (error) throw new Error('員工編號或密碼錯誤');
     await loadProfile(data.user.id);
     if (!CU) {
-      // Fallback: 建立暫時 profile，讓畫面能顯示
-      console.warn('[login] CU still null after loadProfile, using fallback');
-      CU = { id: data.user.id, eid: eid, name: eid, role: 'rt', dept: null, is_active: true };
-      // 嘗試寫入 profile
-      const { error: insErr } = await sb.from('profiles').upsert({
-        id: data.user.id, eid, name: eid, role: 'rt', is_active: true
-      }, { onConflict: 'eid' });
-      console.log('[login] profile upsert error=', insErr);
+      // loadProfile 失敗已經登出並顯示錯誤訊息，這裡直接 return
+      return;
     }
     showApp();
-  } catch(e) { console.error('[login] error:', e); showErr(e.message); }
+  } catch(e) { showErr(e.message); }
   finally    { btn.textContent = '登　入'; btn.disabled = false; }
 }
 function showErr(msg) {
@@ -804,6 +790,18 @@ async function changePw() {
 function roleL(r) { return {admin:'管理員',rt:'RT',nurse:'護理師',doctor:'醫師'}[r] || r; }
 function today()  { return new Date().toISOString().split('T')[0]; }
 const maskMrn = mrn => mrn ? mrn.slice(0,6)+'xx' : '—';
+
+// XSS 防護：所有要插入 innerHTML 的字串都要過 esc()
+function esc(s) {
+  if (s===null||s===undefined) return '';
+  return String(s).replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[c]));
+}
+// 多行文字保留換行（用於備註顯示）
+function escNl(s) {
+  return esc(s).replace(/\n/g,'<br>');
+}
 
 // ══════════════════════════════════════════════════════════
 // 閒置自動登出（15分鐘）
@@ -1055,15 +1053,15 @@ function renderList(pts) {
       : (done24?'電子病歷評估完成 ✓':'待電子病歷評估');
     const avBg = isHigh?'':'style="background:var(--teal)"';
     const sc   = isHigh?'calert':'cok';
-    return `<div class="ptr" onclick="openPt('${p.id}')">
-      <div class="ptav" ${avBg}>${p.name.slice(-2)}</div>
+    return `<div class="ptr" onclick="openPt('${esc(p.id)}')">
+      <div class="ptav" ${avBg}>${esc(p.name.slice(-2))}</div>
       <div class="pti">
-        <div class="ptn">${p.name}
+        <div class="ptn">${esc(p.name)}
           <span class="chip ${cc}" style="font-size:13px">${ct}</span>
           <span class="chip ${sc}" style="font-size:13px">SWIFT ${p.swift_total||0}</span>
         </div>
-        <div class="ptm">${maskMrn(p.mrn)} · ${p.bed||'—'} · ${p.transfer_unit||'—'}</div>
-        <div class="ptm">轉出：${p.transfer_date} · ${vis}</div>
+        <div class="ptm">${maskMrn(p.mrn)} · ${esc(p.bed)||'—'} · ${esc(p.transfer_unit)||'—'}</div>
+        <div class="ptm">轉出：${esc(p.transfer_date)} · ${vis}</div>
       </div>
       <div class="sdot ${dot}"></div>
     </div>`;
@@ -1136,10 +1134,10 @@ async function openPt(id) {
 
   document.getElementById('ov-basic').innerHTML=`
     <div class="ir"><span class="k">病歷號碼</span><span class="v">${maskMrn(p.mrn)}</span></div><div class="dv"></div>
-    <div class="ir"><span class="k">床號</span><span class="v">${p.bed||'—'}</span></div><div class="dv"></div>
-    <div class="ir"><span class="k">轉出單位</span><span class="v">${p.transfer_unit||'—'}</span></div><div class="dv"></div>
+    <div class="ir"><span class="k">床號</span><span class="v">${esc(p.bed)||'—'}</span></div><div class="dv"></div>
+    <div class="ir"><span class="k">轉出單位</span><span class="v">${esc(p.transfer_unit)||'—'}</span></div><div class="dv"></div>
     <div class="ir"><span class="k">ICU 住院天數</span><span class="v">${p.icu_days||'—'} 天</span></div><div class="dv"></div>
-    <div class="ir"><span class="k">SWIFT Score</span><span class="v">${p.swift_total} 分
+    <div class="ir"><span class="k">SWIFT Score</span><span class="v">${parseInt(p.swift_total||0)} 分
       <span class="chip ${parseInt(p.swift_total)>=15?'calert':'cok'}" style="font-size:20px">
         ${parseInt(p.swift_total)>=15?'高風險':'低風險'}</span></span></div>`;
 
@@ -1183,17 +1181,17 @@ function renderVisit(type, visit, prevDone) {
       return `<div class="ir"><span class="k">${d.l}</span><span class="v" style="font-size:13px">${label}</span></div>`;
     }).join('<div class="dv"></div>');
     return `<div class="cb" style="padding:12px 16px">
-      <div class="ir"><span class="k">訪視時間</span><span class="v">${visit.visited_time||'—'}</span></div><div class="dv"></div>
-      <div class="ir"><span class="k">訪視者</span><span class="v">${visit.rt_name||'—'}</span></div>
+      <div class="ir"><span class="k">訪視時間</span><span class="v">${esc(visit.visited_time)||'—'}</span></div><div class="dv"></div>
+      <div class="ir"><span class="k">訪視者</span><span class="v">${esc(visit.rt_name)||'—'}</span></div>
       <div class="dv"></div>
       <div class="ir">
         <span class="k">評估總分</span>
-        <span class="chip ${risk.cls}" style="font-size:13px">${total!==null?total+'分 ':''}${risk.label}</span>
+        <span class="chip ${risk.cls}" style="font-size:13px">${total!==null?total+'分 ':''}${esc(risk.label)}</span>
       </div>
       <div class="dv"></div>
       ${scoreRows}
-      ${ints?`<div class="dv"></div><div class="ir"><span class="k">介入措施</span><span class="v">${ints}</span></div>`:''}
-      ${visit.notes?`<div class="dv"></div><div style="font-size:13px;color:var(--g4);margin-top:6px">備註</div><div style="font-size:14px;margin-top:4px">${visit.notes}</div>`:''}
+      ${ints?`<div class="dv"></div><div class="ir"><span class="k">介入措施</span><span class="v">${esc(ints)}</span></div>`:''}
+      ${visit.notes?`<div class="dv"></div><div style="font-size:13px;color:var(--g4);margin-top:6px">備註</div><div style="font-size:14px;margin-top:4px">${escNl(visit.notes)}</div>`:''}
     </div>`;
   }
   if (!prevDone) return `<div class="cb" style="font-size:15px;color:var(--g4);padding:14px 16px">請先完成 24hr 訪視</div>`;
@@ -1237,10 +1235,10 @@ function initRTForm(type) {
 function renderVisitLow(visit) {
   if (visit) {
     return `<div class="cb" style="padding:12px 16px">
-      <div class="ir"><span class="k">訪視時間</span><span class="v">${visit.visited_time||'—'}</span></div><div class="dv"></div>
-      <div class="ir"><span class="k">訪視者</span><span class="v">${visit.rt_name||'—'}</span></div>
+      <div class="ir"><span class="k">訪視時間</span><span class="v">${esc(visit.visited_time)||'—'}</span></div><div class="dv"></div>
+      <div class="ir"><span class="k">訪視者</span><span class="v">${esc(visit.rt_name)||'—'}</span></div>
       ${visit.notes?`<div class="dv"></div><div style="font-size:13px;color:var(--g4);margin-top:6px">電子病歷評估備註</div>
-      <div style="font-size:14px;margin-top:4px;line-height:1.6">${visit.notes}</div>`:''}
+      <div style="font-size:14px;margin-top:4px;line-height:1.6">${escNl(visit.notes)}</div>`:''}
     </div>`;
   }
   const now = new Date().toLocaleString('zh-TW',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
@@ -1461,8 +1459,14 @@ async function exportCSV() {
     p.created_by_name||'',p.created_at?new Date(p.created_at).toLocaleString('zh-TW'):'',
   ]);
   const bom='\uFEFF';
+  // CSV injection 防護：開頭為 = + - @ 的字串，前面補單引號防止 Excel 視為公式
+  const safeCell = c => {
+    let s = String(c??'').replace(/"/g,'""');
+    if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
+    return s;
+  };
   const csv=bom+[headers,...data].map(row=>
-    row.map(c=>{const s=String(c??'').replace(/"/g,'""');
+    row.map(c=>{const s=safeCell(c);
       return /[,\n"\u4e00-\u9fff]/.test(s)?`"${s}"`:s;}).join(',')
   ).join('\n');
   const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
@@ -1486,41 +1490,44 @@ async function loadUsers() {
   document.getElementById('u-list').innerHTML=(users||[]).map(u=>`
     <div class="ur">
       <div class="uav" style="background:${rbc[u.role]||'var(--g2)'};color:${rcc[u.role]||'var(--g6)'}">
-        ${u.name.slice(-1)}</div>
+        ${esc((u.name||'').slice(-1))}</div>
       <div style="flex:1">
-        <div class="un">${u.name}
+        <div class="un">${esc(u.name)}
           <span class="chip cnavy" style="font-size:20px">${roleL(u.role)}</span>
           ${u.is_active===false?'<span class="chip cgray" style="font-size:20px">已停用</span>':''}
         </div>
-        <div class="um">${u.eid} · ${u.dept||'—'}</div>
+        <div class="um">${esc(u.eid)} · ${esc(u.dept)||'—'}</div>
       </div>
       ${u.id!==CU.id
         ? `<button class="${u.is_active!==false?'bwarn':'bsm'}"
-             onclick="toggleUser('${u.id}',${u.is_active===false})">
+             onclick="toggleUser('${esc(u.id)}',${u.is_active===false})">
              ${u.is_active!==false?'停用':'啟用'}</button>`
         : '<span style="font-size:21px;color:var(--g4)">自己</span>'}
     </div>`).join('');
 }
 
 async function addUser() {
-  const eid  = document.getElementById('u-eid').value.trim().toUpperCase();
-  const name = document.getElementById('u-name').value.trim();
-  const pw   = document.getElementById('u-pw').value;
-  const role = document.getElementById('u-role').value;
-  const dept = document.getElementById('u-dept').value.trim();
-  if (!eid||!name||!pw) { toast('請填寫必填欄位'); return; }
-  if (pw.length<8)       { toast('密碼至少 8 個字元'); return; }
-  const email = eid+'@ms.skh.org.tw';
-  // 用 Supabase Admin API 建立帳號（需 service_role key，這裡用 signUp 暫代）
-  const { data, error } = await sb.auth.signUp({ email, password: pw });
-  if (error) { toast('錯誤：'+error.message); return; }
-  // 寫入 profile
-  await sb.from('profiles').insert({
-    id: data.user.id, eid, name, role, dept: dept||null, is_active: true
-  });
-  toast('帳號已建立：'+eid);
-  ['u-eid','u-name','u-pw','u-dept'].forEach(id=>document.getElementById(id).value='');
-  loadUsers();
+  // ⚠️ Auth signup 已關閉（為了安全），此功能暫不可用
+  // 新帳號請由系統管理員至 Supabase Dashboard 建立：
+  //   1. Authentication → Users → Add user（建 auth user）
+  //   2. Table Editor → profiles → Insert row（建 profile）
+  alert(
+    '【新增帳號流程已變更】\n\n' +
+    '為提升系統安全性，自助註冊功能已關閉。\n' +
+    '新帳號請由管理員至 Supabase Dashboard 建立：\n\n' +
+    '步驟 1：Authentication → Users → Add user\n' +
+    '　　　Email：員工編號@ms.skh.org.tw\n' +
+    '　　　Password：臨時密碼（≥8碼）\n' +
+    '　　　✅ 勾選 Auto Confirm User\n' +
+    '　　　建立後，複製 UID\n\n' +
+    '步驟 2：Table Editor → profiles → Insert row\n' +
+    '　　　id：貼上剛複製的 UID\n' +
+    '　　　eid：員工編號（大寫）\n' +
+    '　　　name：中文姓名\n' +
+    '　　　role：rt / nurse / doctor / admin\n' +
+    '　　　is_active：✅ true\n\n' +
+    '請告知新使用者員工編號和臨時密碼，請他登入後立即修改密碼。'
+  );
 }
 
 async function toggleUser(id, toActive) {
