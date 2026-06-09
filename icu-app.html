@@ -193,7 +193,7 @@ textarea{resize:none}
     <div class="login-hint">忘記密碼請聯絡管理員</div>
     <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--g2);text-align:center;color:var(--g4);font-size:11px;line-height:1.7">
       <div>Developer　林鎮均</div>
-      <div>Version 1.04　2026-06-09</div>
+      <div>Version 1.05　2026-06-09</div>
     </div>
   </div>
 </div>
@@ -1115,6 +1115,10 @@ async function loadList() {
 // ══════════════════════════════════════════════════════════
 async function openPt(id) {
   ovPtId = id;
+  // 每次打開病人都重置編輯區（避免顯示前一筆病人的舊資料）
+  const editWrap = document.getElementById('ov-edit-wrap');
+  if (editWrap) editWrap.style.display = 'none';
+
   const { data: p } = await sb.from('patients_view').select('*').eq('id',id).single();
   const { data: visits } = await sb.from('visits_view').select('*')
     .eq('patient_id',id).order('visit_type');
@@ -1372,6 +1376,9 @@ async function updatePt() {
 function closeOv() {
   document.getElementById('ov-pt').classList.remove('open');
   document.body.style.overflow='';
+  // 關閉時也重置編輯區
+  const editWrap = document.getElementById('ov-edit-wrap');
+  if (editWrap) editWrap.style.display = 'none';
 }
 
 // ══════════════════════════════════════════════════════════
