@@ -193,7 +193,7 @@ textarea{resize:none}
     <div class="login-hint">忘記密碼請聯絡管理員</div>
     <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--g2);text-align:center;color:var(--g4);font-size:11px;line-height:1.7">
       <div>Developer　林鎮均</div>
-      <div>Version 1.03　2026-06-09</div>
+      <div>Version 1.04　2026-06-09</div>
     </div>
   </div>
 </div>
@@ -607,7 +607,7 @@ textarea{resize:none}
       <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
       統計
     </button>
-    <button class="bntab" id="t-export" onclick="go('export')">
+    <button class="bntab" id="t-export" onclick="go('export')" style="display:none">
       <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       匯出
     </button>
@@ -720,6 +720,7 @@ function showApp() {
   appEl.style.cssText = 'display:flex;flex-direction:column;height:100%';
   document.getElementById('tb-user').textContent = CU.name + '（' + roleL(CU.role) + '）';
   document.getElementById('t-admin').style.display = CU.role==='admin' ? 'flex' : 'none';
+  document.getElementById('t-export').style.display = CU.role==='admin' ? 'flex' : 'none';
   document.getElementById('a-date').value = today();
   go('list');
   startIdleWatch();
@@ -789,7 +790,11 @@ async function changePw() {
 
 function roleL(r) { return {admin:'管理員',rt:'RT',nurse:'護理師',doctor:'醫師'}[r] || r; }
 function today()  { return new Date().toISOString().split('T')[0]; }
-const maskMrn = mrn => mrn ? mrn.slice(0,6)+'xx' : '—';
+// 後端 patients_view 已根據呼叫者角色決定 MRN 是否遮罩
+// 前端只需直接顯示，不再重複處理（admin 看完整，其他人看 245591xx）
+const showMrn = mrn => mrn || '—';
+// 保留舊名稱相容性
+const maskMrn = showMrn;
 
 // XSS 防護：所有要插入 innerHTML 的字串都要過 esc()
 function esc(s) {
@@ -1110,7 +1115,7 @@ async function loadList() {
 // ══════════════════════════════════════════════════════════
 async function openPt(id) {
   ovPtId = id;
-  const { data: p } = await sb.from('patients').select('*').eq('id',id).single();
+  const { data: p } = await sb.from('patients_view').select('*').eq('id',id).single();
   const { data: visits } = await sb.from('visits_view').select('*')
     .eq('patient_id',id).order('visit_type');
   if (!p) return;
@@ -1427,6 +1432,10 @@ async function updateExCount() {
   document.getElementById('ex-count').textContent=rows.length;
 }
 async function exportCSV() {
+  if (CU.role !== 'admin') {
+    toast('僅管理員可匯出資料');
+    return;
+  }
   const rows=await getExportData();
   if (!rows.length) { toast('沒有符合條件的資料'); return; }
   const rtL=v=>(v===null||v===undefined||v==='')?'':String(v);
