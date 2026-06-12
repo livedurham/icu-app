@@ -193,7 +193,7 @@ textarea{resize:none}
     <div class="login-hint">忘記密碼請聯絡管理員</div>
     <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--g2);text-align:center;color:var(--g4);font-size:11px;line-height:1.7">
       <div>Developer　林鎮均</div>
-      <div>Version 1.06　2026-06-09</div>
+      <div>Version 1.08　2026-06-09</div>
     </div>
   </div>
 </div>
@@ -643,15 +643,15 @@ let listTab = 'pending'; // 'pending' | 'done'
 // ── RT Assessment Tool (5項，每項0-4分，總分0-20) ──────────────────
 const RT_ITEMS = [
   { k:'ph', l:'肺部疾病史', bg:'#D4F0EB', cl:'#0E7C6A',
-    opts:['無肺部病史','氣喘/COPD病史','輕度惡化','中度惡化','急性惡化/嚴重慢性肺病'] },
+    opts:['無肺部病史、無症狀','有慢性肺病史（COPD/Asthma/ILD/Bronchiectasis）但穩定','慢性肺病輕度惡化 或 急性輕度呼吸道感染','慢性肺病中度惡化 或 急性肺炎/中度肺水腫','嚴重急性惡化/呼吸窘迫'] },
   { k:'bs', l:'呼吸音',     bg:'#D6E8F7', cl:'#0B3D6B',
     opts:['Clear','Mild wheezes','Localized crackles','Diffuse wheezes / rhonchi / coarse crackles / 無呼吸窘迫的 stridor','Markedly diminished / absent / 合併呼吸窘迫的 stridor'] },
   { k:'rr', l:'呼吸次數',   bg:'#EDE9FE', cl:'#5B21B6',
-    opts:['RR 8–20','RR 21–25','RR 26–30','RR 31–35','RR >35'] },
+    opts:['RR 8–20','RR 21–25','RR 26–30','RR 31–35','RR >35 或 <8（呼吸抑制）'] },
   { k:'cg', l:'咳嗽能力',   bg:'#FEF3C7', cl:'#92400E',
-    opts:['強／無痰','強／有痰','弱／無痰','弱／有痰','無力咳／需抽痰'] },
+    opts:['無痰、無咳嗽需求','有痰但能自主咳出','有痰、咳嗽弱但能配合 huff cough 清除','有痰、咳嗽弱、需 CPT 或 nebulizer 輔助清除','無力咳嗽、需 suction'] },
   { k:'ox', l:'氧氣需求',   bg:'#DCFCE7', cl:'#166534',
-    opts:['SpO₂ ≥92% RA','SpO₂ ≥92% NC 2-4L/min','SpO₂ ≥92% O₂ Mask (FiO₂≤50%)','SpO₂ ≥90% Non-rebreathing Mask','SpO₂ ≥90% HFNC/NIV'] },
+    opts:['SpO₂ ≥92% RA','SpO₂ ≥92% NC 1-4 L/min','SpO₂ ≥92% O₂ Mask (FiO₂≤50%)','SpO₂ ≥90% Non-rebreathing Mask / HFNC','SpO₂ ≥90% NIV'] },
 ];
 const INT_DEF = [
   {k:'int_pt',      l:'胸腔物理治療'},
