@@ -193,7 +193,7 @@ textarea{resize:none}
     <div class="login-hint">忘記密碼請聯絡管理員</div>
     <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--g2);text-align:center;color:var(--g4);font-size:11px;line-height:1.7">
       <div>Developer　林鎮均</div>
-      <div>Version 1.10　2026-06-12</div>
+      <div>Version 1.11　2026-06-12</div>
     </div>
   </div>
 </div>
@@ -1088,6 +1088,25 @@ function renderList(pts) {
       : (done24?'電子病歷評估完成 ✓':'待電子病歷評估');
     const avBg = isHigh?'':'style="background:var(--teal)"';
     const sc   = isHigh?'calert':'cok';
+    // 高風險且已完成 24hr 訪視 → 算 v24 風險，顯示在卡片下方
+    let v24RiskHtml = '';
+    if (isHigh && done24) {
+      const v24Scores = {
+        ph: p.v24_ph!==null&&p.v24_ph!==undefined ? Number(p.v24_ph) : null,
+        bs: p.v24_bs!==null&&p.v24_bs!==undefined ? Number(p.v24_bs) : null,
+        rr: p.v24_rr!==null&&p.v24_rr!==undefined ? Number(p.v24_rr) : null,
+        cg: p.v24_cg!==null&&p.v24_cg!==undefined ? Number(p.v24_cg) : null,
+        ox: p.v24_ox!==null&&p.v24_ox!==undefined ? Number(p.v24_ox) : null,
+      };
+      const v24Total = rtTotal(v24Scores);
+      if (v24Total !== null) {
+        const v24Risk = rtRisk(v24Total, v24Scores);
+        // 取等級名稱（去掉括號區間說明）
+        const riskShort = v24Risk.label.split('（')[0];
+        const boostMark = v24Risk.boosted ? ' ⚠️' : '';
+        v24RiskHtml = `<div class="ptm" style="margin-top:3px">24hr 評估：<span class="chip ${v24Risk.cls}" style="font-size:12px">${v24Total}分　${esc(riskShort)}${boostMark}</span></div>`;
+      }
+    }
     return `<div class="ptr" onclick="openPt('${esc(p.id)}')">
       <div class="ptav" ${avBg}>${esc(p.name.slice(-2))}</div>
       <div class="pti">
@@ -1097,6 +1116,7 @@ function renderList(pts) {
         </div>
         <div class="ptm">${maskMrn(p.mrn)} · ${esc(p.bed)||'—'} · ${esc(p.transfer_unit)||'—'}</div>
         <div class="ptm">${esc(p.transfer_date)} 轉出 · ${vis}</div>
+        ${v24RiskHtml}
       </div>
       <div class="sdot ${dot}"></div>
     </div>`;
