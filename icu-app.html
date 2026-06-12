@@ -193,7 +193,7 @@ textarea{resize:none}
     <div class="login-hint">忘記密碼請聯絡管理員</div>
     <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--g2);text-align:center;color:var(--g4);font-size:11px;line-height:1.7">
       <div>Developer　林鎮均</div>
-      <div>Version 1.08　2026-06-09</div>
+      <div>Version 1.10　2026-06-12</div>
     </div>
   </div>
 </div>
@@ -669,12 +669,34 @@ function rtTotal(scores) {
   if (vals.some(v=>v===null)) return null;
   return vals.reduce((a,b)=>a+b, 0);
 }
-function rtRisk(total) {
-  if (total===null) return {label:'—', cls:'cgray'};
-  if (total<=5)  return {label:'低風險（0–5）常規追蹤',    cls:'cok'};
-  if (total<=10) return {label:'中風險（6–10）加強監測',    cls:'cpend'};
-  if (total<=15) return {label:'高風險（11–15）考慮RT介入', cls:'calert'};
-  return          {label:'極高風險（≥16）通知醫師評估是否返回ICU', cls:'calert'};
+
+// 風險評估：總分為基礎，但任一項=4分時自動升級
+// 回傳：{ label, cls, level: 0-3, boosted, boostItems }
+function rtRisk(total, scores) {
+  if (total===null) return {label:'—', cls:'cgray', level:-1, boosted:false, boostItems:[]};
+  // base level：純看總分
+  let level;
+  if      (total<=4)  level = 0;
+  else if (total<=9)  level = 1;
+  else if (total<=14) level = 2;
+  else                level = 3;
+  const baseLevel = level;
+  // 找出哪些項目是 4 分
+  const boostItems = [];
+  if (scores) {
+    const map = {ph:'肺部疾病史', bs:'呼吸音', rr:'呼吸次數', cg:'咳嗽能力', ox:'氧氣需求'};
+    Object.keys(map).forEach(k => { if (scores[k]===4) boostItems.push(map[k]); });
+  }
+  // 升級規則：任一項=4分 → 至少升一級（最高 level 3）
+  if (boostItems.length > 0) level = Math.min(level + 1, 3);
+  const boosted = level !== baseLevel;
+  const labels = [
+    {label:'低風險（0–4）常規追蹤',           cls:'cok'},
+    {label:'中風險（5–9）加強監測',           cls:'cpend'},
+    {label:'高風險（10–14）考慮RT介入',       cls:'calert'},
+    {label:'極高風險（≥15）通知醫師評估是否返回ICU', cls:'calert'},
+  ];
+  return { ...labels[level], level, boosted, boostItems };
 }
 
 // ══════════════════════════════════════════════════════════
@@ -890,7 +912,7 @@ function setScore(prefix, k, score) {
   const total = rtTotal(scoreObj);
   const chip = document.getElementById('rt-total-chip-'+vtype);
   if (chip) {
-    const risk = rtRisk(total);
+    const risk = rtRisk(total, scoreObj);
     chip.className = 'chip '+(total!==null?risk.cls:'cgray');
     chip.textContent = total!==null ? total+'分' : '未完成';
   }
@@ -898,26 +920,34 @@ function setScore(prefix, k, score) {
   const panel = document.getElementById('rt-risk-panel-'+vtype);
   if (panel) {
     if (total!==null) {
-      const risk = rtRisk(total);
       panel.style.display='block';
       panel.className=''; 
-      panel.innerHTML = rtRiskDetail(total);
+      panel.innerHTML = rtRiskDetail(total, scoreObj);
     } else {
       panel.style.display='none';
     }
   }
 }
 
-function rtRiskDetail(total) {
-  let bg, color, title, items;
-  if (total<=5)       { bg='var(--green2)'; color='var(--green)'; title='低風險 — 常規追蹤'; items=[]; }
-  else if (total<=10) { bg='var(--amber2)'; color='var(--amber)'; title='中風險 — 加強監測'; items=[]; }
-  else if (total<=15) { bg='var(--red2)';   color='var(--red)';   title='高風險 — 考慮 RT 介入'; items=['CPT 胸腔物理治療','噴霧治療','抽痰']; }
-  else                { bg='var(--red2)';   color='var(--red)';   title='極高風險 — 通知醫師評估是否需轉回 ICU'; items=[]; }
-  const itemHtml = items.length ? '<div style="margin-top:6px;font-size:13px">'+items.map(i=>'• '+i).join('<br>')+'</div>' : '';
-  return `<div style="background:${bg};border-radius:var(--rs);padding:14px 16px;margin:12px 16px 0">
-    <div style="font-weight:700;font-size:16px;color:${color}">總分 ${total} 分 — ${title}</div>
+function rtRiskDetail(total, scores) {
+  const risk = rtRisk(total, scores);
+  const palette = [
+    {bg:'var(--green2)', color:'var(--green)', title:'低風險 — 常規追蹤',      items:[]},
+    {bg:'var(--amber2)', color:'var(--amber)', title:'中風險 — 加強監測',      items:[]},
+    {bg:'var(--red2)',   color:'var(--red)',   title:'高風險 — 考慮 RT 介入',  items:['CPT 胸腔物理治療','噴霧治療','抽痰']},
+    {bg:'var(--red2)',   color:'var(--red)',   title:'極高風險 — 通知醫師評估是否需轉回 ICU', items:[]},
+  ];
+  const p = palette[risk.level];
+  const itemHtml = p.items.length ? '<div style="margin-top:6px;font-size:13px">'+p.items.map(i=>'• '+i).join('<br>')+'</div>' : '';
+  // 因「任一項=4分」升級時，加上提示
+  const boostHtml = risk.boosted
+    ? `<div style="margin-top:8px;padding:8px 10px;background:rgba(255,255,255,.6);border-radius:6px;font-size:12px;color:${p.color};line-height:1.5">
+         ⚠️ 因 ${esc(risk.boostItems.join('、'))} 達 4 分，風險自動升一級
+       </div>` : '';
+  return `<div style="background:${p.bg};border-radius:var(--rs);padding:14px 16px;margin:12px 16px 0">
+    <div style="font-weight:700;font-size:16px;color:${p.color}">總分 ${total} 分 — ${p.title}</div>
     ${itemHtml}
+    ${boostHtml}
   </div>`;
 }
 
@@ -1178,12 +1208,17 @@ function renderVisit(type, visit, prevDone) {
     const il={int_pt:'胸腔物理治療',int_neb:'噴霧治療',int_suction:'抽痰',
               int_o2:'氧氣調整',int_consult:'胸腔科會診'};
     const ints=Object.keys(il).filter(k=>visit[k]).map(k=>il[k]).join('、');
-    // RT scores stored as 0-4 integers per item
-    const scores = {ph:visit.rt_ph, bs:visit.rt_bs, rr:visit.rt_rr,
-                    cg:visit.rt_cg, ox:visit.rt_ox};
-    const total = Object.values(scores).every(v=>v!==null&&v!==undefined)
-      ? Object.values(scores).reduce((a,b)=>a+Number(b),0) : null;
-    const risk  = rtRisk(total);
+    // RT scores stored as 0-4 integers per item（從 DB 拿回來可能是字串，轉成 Number）
+    const scores = {
+      ph: visit.rt_ph!==null&&visit.rt_ph!==undefined ? Number(visit.rt_ph) : null,
+      bs: visit.rt_bs!==null&&visit.rt_bs!==undefined ? Number(visit.rt_bs) : null,
+      rr: visit.rt_rr!==null&&visit.rt_rr!==undefined ? Number(visit.rt_rr) : null,
+      cg: visit.rt_cg!==null&&visit.rt_cg!==undefined ? Number(visit.rt_cg) : null,
+      ox: visit.rt_ox!==null&&visit.rt_ox!==undefined ? Number(visit.rt_ox) : null,
+    };
+    const total = Object.values(scores).every(v=>v!==null)
+      ? Object.values(scores).reduce((a,b)=>a+b,0) : null;
+    const risk  = rtRisk(total, scores);
     const scoreRows = RT_ITEMS.map(d=>{
       const v = scores[d.k];
       const label = v!==null&&v!==undefined ? `${v}分 — ${d.opts[v]}` : '未填';
@@ -1197,6 +1232,7 @@ function renderVisit(type, visit, prevDone) {
         <span class="k">評估總分</span>
         <span class="chip ${risk.cls}" style="font-size:13px">${total!==null?total+'分 ':''}${esc(risk.label)}</span>
       </div>
+      ${risk.boosted?`<div style="padding:8px 0;font-size:12px;color:var(--red);line-height:1.5">⚠️ 因 ${esc(risk.boostItems.join('、'))} 達 4 分，風險自動升一級</div>`:''}
       <div class="dv"></div>
       ${scoreRows}
       ${ints?`<div class="dv"></div><div class="ir"><span class="k">介入措施</span><span class="v">${esc(ints)}</span></div>`:''}
@@ -1222,10 +1258,11 @@ function renderVisit(type, visit, prevDone) {
     <div style="padding:12px 16px 6px;border-top:1px solid var(--g2);margin-top:12px">
       <div style="font-size:14px;color:var(--g6);line-height:2;margin-bottom:12px">
         <div style="font-weight:700;margin-bottom:4px;color:var(--g8)">總分：0–20 分</div>
-        <div>• 0–5 分：低風險，常規追蹤</div>
-        <div>• 6–10 分：中風險，加強監測</div>
-        <div>• 11–15 分：高風險，考慮 RT 介入（CPT、噴霧、抽痰）</div>
-        <div>• ≥16 分：極高風險，通知醫師評估是否需轉回 ICU</div>
+        <div>• 0–4 分：低風險，常規追蹤</div>
+        <div>• 5–9 分：中風險，加強監測</div>
+        <div>• 10–14 分：高風險，考慮 RT 介入（CPT、噴霧、抽痰）</div>
+        <div>• ≥15 分：極高風險，通知醫師評估是否需轉回 ICU</div>
+        <div style="margin-top:6px;color:var(--red);font-size:13px">⚠️ 任一單項達 4 分時，風險自動升一級</div>
       </div>
       <div style="font-size:13px;font-weight:700;color:var(--g4);margin-bottom:8px;letter-spacing:.05em">介入措施（可複選）</div>
       <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px">${int_html}</div>
