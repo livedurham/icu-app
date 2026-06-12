@@ -1096,7 +1096,7 @@ function renderList(pts) {
           <span class="chip ${sc}" style="font-size:13px">SWIFT ${p.swift_total||0}</span>
         </div>
         <div class="ptm">${maskMrn(p.mrn)} · ${esc(p.bed)||'—'} · ${esc(p.transfer_unit)||'—'}</div>
-        <div class="ptm">轉出：${esc(p.transfer_date)} · ${vis}</div>
+        <div class="ptm">${esc(p.transfer_date)} 轉出 · ${vis}</div>
       </div>
       <div class="sdot ${dot}"></div>
     </div>`;
