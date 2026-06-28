@@ -196,7 +196,7 @@ textarea{resize:none}
     <div class="login-hint">忘記密碼請聯絡管理員</div>
     <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--g2);text-align:center;color:var(--g4);font-size:11px;line-height:1.7">
       <div>Developer　林鎮均</div>
-      <div>Version 1.13　2026-06-28</div>
+      <div>Version 1.14　2026-06-28</div>
     </div>
   </div>
 </div>
@@ -1087,6 +1087,10 @@ function renderList(pts) {
   const filtered = listTab==='pending'
     ? pts.filter(p=>!isDone(p))
     : pts.filter(p=>isDone(p));
+  filtered.sort((a,b)=>{
+    const byDate=String(b.transfer_date||'').localeCompare(String(a.transfer_date||''));
+    return byDate || parseInt(b.swift_total||0)-parseInt(a.swift_total||0);
+  });
 
   if (!filtered.length) {
     const msg = listTab==='pending' ? '目前無待訪視病人' : '目前無已完成病人';
@@ -1168,7 +1172,6 @@ async function loadList() {
     .from('patients_view')
     .select('*')
     .eq('status','active')
-    .order('swift_total', {ascending:false})
     .order('transfer_date', {ascending:false});
   if (error) { toast('載入失敗：'+error.message); return; }
   window._cachedPts = pts || [];
