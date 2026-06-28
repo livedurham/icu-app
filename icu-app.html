@@ -80,6 +80,9 @@ textarea{resize:none}
 /* ── BUTTONS ── */
 .bp{width:100%;padding:14px;border-radius:var(--r);background:var(--navy);color:white;border:none;font-size:21px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:.01em}
 .bp:active{opacity:.85}
+.form-actions{display:flex;gap:8px;margin-top:14px}
+.form-actions .bp{width:auto}
+.form-actions .bp:first-child{flex:1}
 .bsm{padding:7px 15px;border-radius:var(--rs);background:var(--navy);color:white;border:none;font-size:21px;font-weight:600;font-family:inherit;cursor:pointer}
 .bdanger{padding:7px 15px;border-radius:var(--rs);background:var(--red2);color:var(--red);border:1px solid #FCA5A5;font-size:21px;font-weight:600;font-family:inherit;cursor:pointer}
 .bwarn{padding:7px 15px;border-radius:var(--rs);background:var(--amber2);color:var(--amber);border:1px solid #FCD34D;font-size:21px;font-weight:600;font-family:inherit;cursor:pointer}
@@ -193,7 +196,7 @@ textarea{resize:none}
     <div class="login-hint">忘記密碼請聯絡管理員</div>
     <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--g2);text-align:center;color:var(--g4);font-size:11px;line-height:1.7">
       <div>Developer　林鎮均</div>
-      <div>Version 1.11　2026-06-12</div>
+      <div>Version 1.13　2026-06-28</div>
     </div>
   </div>
 </div>
@@ -262,6 +265,17 @@ textarea{resize:none}
           </select>
         </div>
         <div class="fr"><label class="fl">轉出日期 *</label><input type="date" id="e-date"></div>
+        <div class="form-actions">
+          <button class="bp" onclick="updatePt()">儲存基本資料</button>
+          <button class="bp" style="flex:0 0 auto;background:var(--g3);color:var(--g6)" onclick="closeEdit()">取消</button>
+        </div>
+      </div></div>
+    </div>
+
+    <!-- 修正 SWIFT（所有啟用使用者可用，透過受控 RPC 更新） -->
+    <div id="ov-swift-edit-wrap" style="display:none">
+      <div class="stitle">修正 SWIFT Score</div>
+      <div class="card"><div class="cb">
         <div class="stitle" style="margin-top:4px">SWIFT Score</div>
         <div class="swr">
           <div class="swl">入院來源<small>Admission Source</small></div>
@@ -337,9 +351,9 @@ textarea{resize:none}
           </div>
           <span class="chip cok" id="e-sw-risk" style="font-size:14px">低風險</span>
         </div>
-        <div style="display:flex;gap:8px;margin-top:14px">
-          <button class="bp" style="flex:1" onclick="updatePt()">儲存修改</button>
-          <button class="bp" style="flex:0 0 auto;background:var(--g3);color:var(--g6)" onclick="closeEdit()">取消</button>
+        <div class="form-actions">
+          <button class="bp" onclick="updateSwift()">儲存 SWIFT 修正</button>
+          <button class="bp" style="flex:0 0 auto;background:var(--g3);color:var(--g6)" onclick="closeSwiftEdit()">取消</button>
         </div>
       </div></div>
     </div>
@@ -416,6 +430,10 @@ textarea{resize:none}
             </select>
           </div>
           <div class="fr"><label class="fl">轉出日期 *</label><input type="date" id="a-date"></div>
+          <div class="fr">
+            <label class="fl">填寫者</label>
+            <div id="a-created-by" style="padding:11px 13px;border:1.5px solid var(--g2);border-radius:var(--rs);font-size:16px;background:var(--g1);color:var(--g6)">—</div>
+          </div>
         </div>
       </div>
 
@@ -744,6 +762,7 @@ function showApp() {
   document.getElementById('t-admin').style.display = CU.role==='admin' ? 'flex' : 'none';
   document.getElementById('t-export').style.display = CU.role==='admin' ? 'flex' : 'none';
   document.getElementById('a-date').value = today();
+  document.getElementById('a-created-by').textContent = CU.name;
   go('list');
   startIdleWatch();
 }
@@ -1032,6 +1051,7 @@ function resetAdd() {
   ['a-name','a-mrn','a-bed','a-days'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('a-unit').value = '';
   document.getElementById('a-date').value = today();
+  document.getElementById('a-created-by').textContent = CU?.name||'—';
   ['sw-src','sw-los','sw-gcs','sw-pf','sw-pco2'].forEach(id=>
     document.getElementById(id).selectedIndex=0);
   calcSw();
@@ -1168,11 +1188,15 @@ async function openPt(id) {
   // 每次打開病人都重置編輯區（避免顯示前一筆病人的舊資料）
   const editWrap = document.getElementById('ov-edit-wrap');
   if (editWrap) editWrap.style.display = 'none';
+  const swiftEditWrap = document.getElementById('ov-swift-edit-wrap');
+  if (swiftEditWrap) swiftEditWrap.style.display = 'none';
 
   const { data: p } = await sb.from('patients_view').select('*').eq('id',id).single();
   const { data: visits } = await sb.from('visits_view').select('*')
     .eq('patient_id',id).order('visit_type');
   if (!p) return;
+  window._currentPatient = p;
+  window._currentVisits = visits || [];
 
   document.getElementById('ov-name').textContent = p.name;
   document.getElementById('ov-sub').textContent =
@@ -1198,7 +1222,8 @@ async function openPt(id) {
     <div class="ir"><span class="k">ICU 住院天數</span><span class="v">${p.icu_days||'—'} 天</span></div><div class="dv"></div>
     <div class="ir"><span class="k">SWIFT Score</span><span class="v">${parseInt(p.swift_total||0)} 分
       <span class="chip ${parseInt(p.swift_total)>=15?'calert':'cok'}" style="font-size:20px">
-        ${parseInt(p.swift_total)>=15?'高風險':'低風險'}</span></span></div>`;
+        ${parseInt(p.swift_total)>=15?'高風險':'低風險'}</span></span></div><div class="dv"></div>
+    <div class="ir"><span class="k">填寫者</span><span class="v">${esc(p.created_by_name)||'—'}</span></div>`;
 
   // 低風險：只顯示一次電子病歷評估；高風險：24hr + 48hr
   document.getElementById('stitle-v48').style.display = isHighRisk ? '' : 'none';
@@ -1207,17 +1232,19 @@ async function openPt(id) {
 
   if (isHighRisk) {
     document.getElementById('ov-v24').innerHTML = renderVisit('24h', v24, true);
-    if (!v24) setTimeout(()=>initRTForm('24h'),0);
+    if (!v24) setTimeout(()=>initRTForm('24h',null),0);
     document.getElementById('ov-v48').innerHTML = renderVisit('48h', v48, !!v24);
-    if (!v48 && v24) setTimeout(()=>initRTForm('48h'),0);
+    if (!v48 && v24) setTimeout(()=>initRTForm('48h',null),0);
   } else {
     document.getElementById('ov-v24').innerHTML = renderVisitLow(v24);
   }
-  document.getElementById('ov-del').innerHTML = CU.role==='admin'
-    ? `<div style="display:flex;gap:8px">
-         <button class="bsm" style="flex:1" onclick="openEdit()">編輯基本資料</button>
-         <button class="bdanger" style="flex:1" onclick="delPt('${id}')">刪除記錄</button>
-       </div>` : '';
+  document.getElementById('ov-del').innerHTML = `<div style="display:flex;gap:8px;flex-wrap:wrap">
+    <button class="bsm" style="flex:1" onclick="openSwiftEdit()">修正 SWIFT</button>
+    ${CU.role==='admin'
+      ? `<button class="bsm" style="flex:1" onclick="openEdit()">編輯基本資料</button>
+         <button class="bdanger" style="flex:1" onclick="delPt('${id}')">刪除記錄</button>`
+      : ''}
+  </div>`;
 
   document.getElementById('ov-pt').classList.add('open');
   document.body.style.overflow='hidden';
@@ -1246,7 +1273,7 @@ function renderVisit(type, visit, prevDone) {
     }).join('<div class="dv"></div>');
     return `<div class="cb" style="padding:12px 16px">
       <div class="ir"><span class="k">訪視時間</span><span class="v">${esc(visit.visited_time)||'—'}</span></div><div class="dv"></div>
-      <div class="ir"><span class="k">訪視者</span><span class="v">${esc(visit.rt_name)||'—'}</span></div>
+      <div class="ir"><span class="k">最後填寫者</span><span class="v">${esc(visit.rt_name)||'—'}</span></div>
       <div class="dv"></div>
       <div class="ir">
         <span class="k">評估總分</span>
@@ -1257,17 +1284,24 @@ function renderVisit(type, visit, prevDone) {
       ${scoreRows}
       ${ints?`<div class="dv"></div><div class="ir"><span class="k">介入措施</span><span class="v">${esc(ints)}</span></div>`:''}
       ${visit.notes?`<div class="dv"></div><div style="font-size:13px;color:var(--g4);margin-top:6px">備註</div><div style="font-size:14px;margin-top:4px">${escNl(visit.notes)}</div>`:''}
+      <button class="bsm" style="width:100%;margin-top:14px" onclick="editVisit('${type}')">修正訪視記錄</button>
     </div>`;
   }
   if (!prevDone) return `<div class="cb" style="font-size:15px;color:var(--g4);padding:14px 16px">請先完成 24hr 訪視</div>`;
+  return renderVisitForm(type, null);
+}
+
+function renderVisitForm(type, visit) {
   const prefix = type==='24h'?'v24':'v48';
   const int_html = INT_DEF.map(i=>
-    `<button class="ibt" id="ib-${type}-${i.k}" onclick="this.classList.toggle('on')">${i.l}</button>`
+    `<button class="ibt ${visit?.[i.k]?'on':''}" id="ib-${type}-${i.k}" onclick="this.classList.toggle('on')">${i.l}</button>`
   ).join('');
   const now=new Date().toLocaleString('zh-TW',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+  const time=visit?.visited_time||now;
+  const notes=visit?.notes||'';
   return `<div>
     <div style="padding:12px 16px;border-bottom:1px solid var(--g2);display:flex;align-items:center;justify-content:space-between;gap:10px">
-      <div style="flex:1"><label class="fl">訪視時間</label><input type="text" id="vt-${type}" value="${now}"></div>
+      <div style="flex:1"><label class="fl">訪視時間</label><input type="text" id="vt-${type}" value="${esc(time)}"></div>
       <div style="text-align:right">
         <div style="font-size:11px;color:var(--g4);margin-bottom:3px">評估總分</div>
         <span class="chip cgray" id="rt-total-chip-${type}" style="font-size:14px;font-weight:700">未完成</span>
@@ -1286,39 +1320,89 @@ function renderVisit(type, visit, prevDone) {
       </div>
       <div style="font-size:13px;font-weight:700;color:var(--g4);margin-bottom:8px;letter-spacing:.05em">介入措施（可複選）</div>
       <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px">${int_html}</div>
-      <div class="fr"><label class="fl">備註</label><textarea id="vn-${type}" rows="3" placeholder="異常狀況、通知記錄…"></textarea></div>
-      <button class="bp" onclick="saveVisit('${type}')">儲存 ${type} 訪視記錄</button>
+      <div class="fr"><label class="fl">備註</label><textarea id="vn-${type}" rows="3" placeholder="異常狀況、通知記錄…">${esc(notes)}</textarea></div>
+      <div class="fr"><label class="fl">本次填寫者</label><div style="padding:10px 12px;border-radius:var(--rs);background:var(--g1);color:var(--g6)">${esc(CU?.name)||'—'}</div></div>
+      <div class="form-actions">
+        <button class="bp" onclick="saveVisit('${type}')">${visit?'儲存修正':'儲存 '+type+' 訪視記錄'}</button>
+        ${visit?`<button class="bp" style="flex:0 0 auto;background:var(--g3);color:var(--g6)" onclick="cancelVisitEdit('${type}')">取消</button>`:''}
+      </div>
     </div>
   </div>`;
 }
 
-function initRTForm(type) {
-  const scores = rtScoreV[type];
+function scoresFromVisit(visit) {
+  return {
+    ph: visit?.rt_ph!==null&&visit?.rt_ph!==undefined ? Number(visit.rt_ph) : null,
+    bs: visit?.rt_bs!==null&&visit?.rt_bs!==undefined ? Number(visit.rt_bs) : null,
+    rr: visit?.rt_rr!==null&&visit?.rt_rr!==undefined ? Number(visit.rt_rr) : null,
+    cg: visit?.rt_cg!==null&&visit?.rt_cg!==undefined ? Number(visit.rt_cg) : null,
+    ox: visit?.rt_ox!==null&&visit?.rt_ox!==undefined ? Number(visit.rt_ox) : null,
+  };
+}
+
+function initRTForm(type, visit) {
+  const scores = scoresFromVisit(visit);
+  rtScoreV[type] = scores;
   buildRTUI('rt-form-'+type, scores, type==='24h'?'v24':'v48');
+  const prefix=type==='24h'?'v24':'v48';
+  Object.entries(scores).forEach(([key,value])=>{
+    if (value===null) return;
+    const sel=document.getElementById(`${prefix}-${key}-sel`);
+    if (sel) sel.value=String(value);
+    setScore(prefix,key,value);
+  });
+}
+
+function editVisit(type) {
+  const visit=(window._currentVisits||[]).find(v=>v.visit_type===type);
+  document.getElementById(type==='24h'?'ov-v24':'ov-v48').innerHTML=renderVisitForm(type,visit);
+  setTimeout(()=>initRTForm(type,visit),0);
+}
+
+function cancelVisitEdit(type) {
+  const visit=(window._currentVisits||[]).find(v=>v.visit_type===type);
+  document.getElementById(type==='24h'?'ov-v24':'ov-v48').innerHTML=renderVisit(type,visit,true);
 }
 
 // ── 低風險病人：簡易電子病歷評估 ──────────────────────────────────
-function renderVisitLow(visit) {
-  if (visit) {
+function renderVisitLow(visit, editing=false) {
+  if (visit && !editing) {
     return `<div class="cb" style="padding:12px 16px">
       <div class="ir"><span class="k">訪視時間</span><span class="v">${esc(visit.visited_time)||'—'}</span></div><div class="dv"></div>
-      <div class="ir"><span class="k">訪視者</span><span class="v">${esc(visit.rt_name)||'—'}</span></div>
+      <div class="ir"><span class="k">最後填寫者</span><span class="v">${esc(visit.rt_name)||'—'}</span></div>
       ${visit.notes?`<div class="dv"></div><div style="font-size:13px;color:var(--g4);margin-top:6px">電子病歷評估備註</div>
       <div style="font-size:14px;margin-top:4px;line-height:1.6">${escNl(visit.notes)}</div>`:''}
+      <button class="bsm" style="width:100%;margin-top:14px" onclick="editVisitLow()">修正評估記錄</button>
     </div>`;
   }
   const now = new Date().toLocaleString('zh-TW',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+  const time=visit?.visited_time||now;
+  const notes=visit?.notes||'';
   return `<div>
     <div style="padding:12px 16px;border-bottom:1px solid var(--g2)">
-      <div class="fr"><label class="fl">訪視時間</label><input type="text" id="vt-low" value="${now}"></div>
+      <div class="fr"><label class="fl">訪視時間</label><input type="text" id="vt-low" value="${esc(time)}"></div>
     </div>
     <div style="padding:12px 16px">
       <div class="fr"><label class="fl">電子病歷評估備註</label>
-        <textarea id="vn-low" rows="5" placeholder="請輸入電子病歷評估內容…"></textarea>
+        <textarea id="vn-low" rows="5" placeholder="請輸入電子病歷評估內容…">${esc(notes)}</textarea>
       </div>
-      <button class="bp" onclick="saveVisitLow()">儲存評估記錄</button>
+      <div class="fr"><label class="fl">本次填寫者</label><div style="padding:10px 12px;border-radius:var(--rs);background:var(--g1);color:var(--g6)">${esc(CU?.name)||'—'}</div></div>
+      <div class="form-actions">
+        <button class="bp" onclick="saveVisitLow()">${visit?'儲存修正':'儲存評估記錄'}</button>
+        ${visit?`<button class="bp" style="flex:0 0 auto;background:var(--g3);color:var(--g6)" onclick="cancelVisitLowEdit()">取消</button>`:''}
+      </div>
     </div>
   </div>`;
+}
+
+function editVisitLow() {
+  const visit=(window._currentVisits||[]).find(v=>v.visit_type==='24h');
+  document.getElementById('ov-v24').innerHTML=renderVisitLow(visit,true);
+}
+
+function cancelVisitLowEdit() {
+  const visit=(window._currentVisits||[]).find(v=>v.visit_type==='24h');
+  document.getElementById('ov-v24').innerHTML=renderVisitLow(visit);
 }
 
 async function saveVisitLow() {
@@ -1344,6 +1428,7 @@ async function saveVisit(type) {
     if (!data) { toast('請先完成 24hr 訪視'); return; }
   }
   const rs = rtScoreV[type];
+  if (Object.values(rs).some(v=>v===null)) { toast('請完成全部五項評分'); return; }
   const intVals={};
   INT_DEF.forEach(i=>{
     const el=document.getElementById('ib-'+type+'-'+i.k);
@@ -1366,9 +1451,12 @@ async function saveVisit(type) {
 }
 
 async function delPt(id) {
-  if (!confirm('確認刪除此病人記錄？')) return;
-  await sb.from('patients').update({status:'deleted'}).eq('id',id);
-  closeOv(); toast('記錄已刪除'); loadList();
+  if (!confirm('確認永久刪除此病人及其所有訪視記錄？此動作無法復原。')) return;
+  const { error } = await sb.from('patients').delete().eq('id',id);
+  if (error) { toast('刪除失敗：'+error.message); return; }
+  closeOv();
+  toast('病人及訪視記錄已永久刪除');
+  loadList();
 }
 
 function openEdit() {
@@ -1381,15 +1469,6 @@ function openEdit() {
     document.getElementById('e-days').value  = p.icu_days||'';
     document.getElementById('e-unit').value  = p.transfer_unit||'';
     document.getElementById('e-date').value  = p.transfer_date||'';
-    // SWIFT selects — match by value
-    ['e-sw-src','e-sw-los','e-sw-gcs','e-sw-pf','e-sw-pco2'].forEach((sid,i)=>{
-      const keys=['swift_source','swift_los','swift_gcs','swift_pf','swift_pco2'];
-      const sel=document.getElementById(sid);
-      for (let o of sel.options) {
-        if (parseInt(o.value)===parseInt(p[keys[i]])) { sel.value=o.value; break; }
-      }
-    });
-    calcSwEdit();
     document.getElementById('ov-edit-wrap').style.display='block';
     document.getElementById('ov-edit-wrap').scrollIntoView({behavior:'smooth'});
   });
@@ -1397,6 +1476,26 @@ function openEdit() {
 
 function closeEdit() {
   document.getElementById('ov-edit-wrap').style.display='none';
+}
+
+function openSwiftEdit() {
+  const p=window._currentPatient;
+  if (!p) return;
+  const ids=['e-sw-src','e-sw-los','e-sw-gcs','e-sw-pf','e-sw-pco2'];
+  const keys=['swift_source','swift_los','swift_gcs','swift_pf','swift_pco2'];
+  ids.forEach((id,index)=>{
+    document.getElementById(id).value=String(parseInt(p[keys[index]]||0));
+  });
+  document.getElementById('e-sf-spo2').value='';
+  document.getElementById('e-sf-fio2').value='';
+  document.getElementById('e-sf-result').textContent='—';
+  calcSwEdit();
+  document.getElementById('ov-swift-edit-wrap').style.display='block';
+  document.getElementById('ov-swift-edit-wrap').scrollIntoView({behavior:'smooth'});
+}
+
+function closeSwiftEdit() {
+  document.getElementById('ov-swift-edit-wrap').style.display='none';
 }
 
 function calcSwEdit() {
@@ -1414,19 +1513,33 @@ async function updatePt() {
   const date = document.getElementById('e-date').value;
   if (!name||!mrn||!date) { toast('請填寫姓名、病歷號碼、轉出日期'); return; }
   if (!/^[A-Za-z0-9]{8}$/.test(mrn)) { toast('病歷號碼須為 8 碼英數字'); return; }
-  const sw = id => parseInt(document.getElementById(id).value);
   const { error } = await sb.from('patients').update({
     name, mrn,
     bed:           document.getElementById('e-bed').value.trim()||null,
     transfer_unit: document.getElementById('e-unit').value||null,
     transfer_date: date,
     icu_days:      parseInt(document.getElementById('e-days').value)||null,
-    swift_source: sw('e-sw-src'), swift_los: sw('e-sw-los'), swift_gcs: sw('e-sw-gcs'),
-    swift_pf:     sw('e-sw-pf'),  swift_pco2: sw('e-sw-pco2'),
   }).eq('id', ovPtId);
   if (error) { toast('儲存失敗：'+error.message); return; }
   toast('基本資料已更新');
   closeEdit();
+  openPt(ovPtId);
+  loadList();
+}
+
+async function updateSwift() {
+  const score=id=>parseInt(document.getElementById(id).value);
+  const { error } = await sb.rpc('update_patient_swift', {
+    p_patient_id: ovPtId,
+    p_swift_source: score('e-sw-src'),
+    p_swift_los: score('e-sw-los'),
+    p_swift_gcs: score('e-sw-gcs'),
+    p_swift_pf: score('e-sw-pf'),
+    p_swift_pco2: score('e-sw-pco2'),
+  });
+  if (error) { toast('SWIFT 修正失敗：'+error.message); return; }
+  toast('SWIFT Score 已更新');
+  closeSwiftEdit();
   openPt(ovPtId);
   loadList();
 }
@@ -1436,6 +1549,8 @@ function closeOv() {
   // 關閉時也重置編輯區
   const editWrap = document.getElementById('ov-edit-wrap');
   if (editWrap) editWrap.style.display = 'none';
+  const swiftEditWrap = document.getElementById('ov-swift-edit-wrap');
+  if (swiftEditWrap) swiftEditWrap.style.display = 'none';
 }
 
 // ══════════════════════════════════════════════════════════
@@ -1453,7 +1568,13 @@ async function loadDash() {
   document.getElementById('d-24h').textContent = n ? Math.round(d24/n*100)+'%':'—';
   document.getElementById('d-48h').textContent = high.length ? Math.round(d48/high.length*100)+'%':'—';
 
-  const { data: vis } = await sb.from('visits').select('*');
+  let vis=[];
+  if (pts.length) {
+    const { data, error } = await sb.from('visits').select('*')
+      .in('patient_id', pts.map(p=>p.id));
+    if (error) { toast('介入統計載入失敗：'+error.message); }
+    vis=data||[];
+  }
   const ic={int_pt:0,int_neb:0,int_suction:0,int_o2:0,int_consult:0};
   (vis||[]).forEach(v=>Object.keys(ic).forEach(k=>{ if(v[k]) ic[k]++; }));
   document.getElementById('di-pt').textContent   = ic.int_pt;
